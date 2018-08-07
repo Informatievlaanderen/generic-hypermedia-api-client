@@ -1,17 +1,11 @@
 "use strict";
 exports.__esModule = true;
 var MyMetadataApiHandler = /** @class */ (function () {
-    // TODO : change to interface
-    function MyMetadataApiHandler(metadataCallback, apiClient, followDocumentationLink) {
-        this.metadataCallback = metadataCallback;
-        this.apiClient = apiClient;
-        this.followDocLink = followDocumentationLink;
-    }
-    /*constructor(args: IMetadataHandlerArgs){
+    function MyMetadataApiHandler(args) {
         this.metadataCallback = args.metadataCallback;
         this.apiClient = args.apiClient;
         this.followDocLink = args.followDocumentationLink;
-    }*/
+    }
     MyMetadataApiHandler.prototype.onFetch = function (response) {
         //Check the header, and check its API documentation link.
         if (response.headers.get('link') != null) {
@@ -24,6 +18,9 @@ var MyMetadataApiHandler = /** @class */ (function () {
     MyMetadataApiHandler.prototype.onQuad = function (quad) {
         //Search for API doc predicates
         //API documentation link
+        if (quad.predicate.value === 'void:subset') {
+            console.log('YIHA');
+        }
         if (this.apiDocumentation || quad.predicate.value === 'http://www.w3.org/ns/hydra/core#apiDocumentation') {
             if (!this.apiDocumentation) {
                 this.apiDocumentation = quad.subject.value;

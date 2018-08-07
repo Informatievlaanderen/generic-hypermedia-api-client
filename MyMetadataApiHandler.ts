@@ -21,17 +21,11 @@ export class MyMetadataApiHandler implements IApiHandler {
     private temporal: string;
     private spatial: string;
 
-    // TODO : change to interface
-    constructor(metadataCallback: () => any, apiClient: ApiClient, followDocumentationLink: boolean) {
-        this.metadataCallback = metadataCallback;
-        this.apiClient = apiClient;
-        this.followDocLink = followDocumentationLink;
-    }
-    /*constructor(args: IMetadataHandlerArgs){
+    constructor(args: IMetadataHandlerArgs){
         this.metadataCallback = args.metadataCallback;
         this.apiClient = args.apiClient;
         this.followDocLink = args.followDocumentationLink;
-    }*/
+    }
 
     onFetch(response: Response) {
         //Check the header, and check its API documentation link.
@@ -46,6 +40,8 @@ export class MyMetadataApiHandler implements IApiHandler {
     onQuad(quad: RDF.Quad) {
         //Search for API doc predicates
         //API documentation link
+        if(quad.predicate.value === 'void:subset'){console.log('YIHA')}
+
         if (this.apiDocumentation || quad.predicate.value === 'http://www.w3.org/ns/hydra/core#apiDocumentation') {
             if (!this.apiDocumentation) {
                 this.apiDocumentation = quad.subject.value;

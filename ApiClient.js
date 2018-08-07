@@ -1,5 +1,6 @@
 "use strict";
 exports.__esModule = true;
+var MyMetadataApiHandler_1 = require("./MyMetadataApiHandler");
 var PaginationHandler_1 = require("./PaginationHandler");
 //require('es6-promise').polyfill();
 require('isomorphic-fetch');
@@ -27,34 +28,27 @@ var ApiClient = /** @class */ (function () {
      * @param {IApiHandler[]} handlers An array of handlers to invoke on the response.
      */
     ApiClient.prototype.fetch = function (url, handlers) {
-        var _this = this;
         this.fetcher(url).then(function (response) {
+            //response.url -- check as subject
             //Http
             for (var i = 0; i < handlers.length; i++) {
                 handlers[i].onFetch(response);
             }
             var contentType = response.headers.get('content-type').split(';')[0];
-            //Semantic
-            response.json().then(function (json) {
-                if (!_this.parser) {
-                    _this.parser = formats.parsers.find(contentType);
+            var parser = formats.parsers.find(contentType);
+            var stream = new parser.Impl(response.body);
+            stream.on('data', function (quad) {
+                for (var i = 0; i < handlers.length; i++) {
+                    handlers[i].onQuad(quad);
                 }
-                try {
-                    var stream = _this.parser["import"](stringToStream(JSON.stringify(json)));
-                    stream.on('data', function (quad) {
-                        for (var i = 0; i < handlers.length; i++) {
-                            handlers[i].onQuad(quad);
-                        }
-                    });
-                    stream.on('end', function () {
-                        for (var i = 0; i < handlers.length; i++) {
-                            handlers[i].onEnd();
-                        }
-                    });
+            });
+            stream.on('end', function () {
+                for (var i = 0; i < handlers.length; i++) {
+                    handlers[i].onEnd();
                 }
-                catch (e) {
-                    console.log(e);
-                }
+            });
+            stream.on('error', function (error) {
+                console.error('ERROR: ' + error);
             });
         });
     };
@@ -65,8 +59,8 @@ exports.ApiClient = ApiClient;
 try {
     var client = new ApiClient(null);
     client.fetch("https://graph.irail.be/sncb/connections", [
-        //new MyMetadataApiHandler((metadata) => console.log(metadata), client, true),
-        new PaginationHandler_1.PaginationHandler(function (pages) { return console.log(pages); })
+        new MyMetadataApiHandler_1.MyMetadataApiHandler({ metadataCallback: function (metadata) { return console.log(metadata); }, apiClient: client, followDocumentationLink: true }),
+        new PaginationHandler_1.PaginationHandler({ pagedataCallback: function (pages) { return console.log(pages); } })
     ]);
 }
 finally { }

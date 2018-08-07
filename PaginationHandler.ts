@@ -12,13 +12,9 @@ export class PaginationHandler implements IApiHandler {
     private first: string;
     private prev: string;
 
-    //TODO : use interface
-    constructor(pagedataCallback: () => any){
-        this.pagedataCallback = pagedataCallback;
+    constructor(args: IPaginationHandlerArgs){
+        this.pagedataCallback = args.pagedataCallback;
     }
-    /*constructor(args: IPaginationHandlerArgs){
-        this.pagedataCallback = args.pagedataCallback();
-    }*/
 
     onFetch(response: Response) {
         if(response.headers.get('link') !== null){

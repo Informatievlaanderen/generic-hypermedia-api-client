@@ -40,33 +40,31 @@ export class ApiClient {
      */
     fetch(url: string, handlers: IApiHandler[]): void {
         this.fetcher(url).then(response => {
+            //response.url -- check as subject
             //Http
             for (let i = 0; i < handlers.length; i++) {
                 handlers[i].onFetch(response);
             }
             const contentType = response.headers.get('content-type').split(';')[0];
 
-            //Semantic
-            response.json().then(json => {
-                if(!this.parser){
-                    this.parser = formats.parsers.find(contentType);
+            let parser = formats.parsers.find(contentType);
+            let stream = new parser.Impl(response.body);
+
+            stream.on('data', (quad) => {
+                for(let i = 0 ; i < handlers.length ; i++){
+                    handlers[i].onQuad(quad);
                 }
-                try {
-                    let stream = this.parser.import(stringToStream(JSON.stringify(json)));
-                    stream.on('data', (quad) => {
-                        for (let i = 0; i < handlers.length; i++) {
-                            handlers[i].onQuad(quad);
-                        }
-                    });
-                    stream.on('end', () => {
-                        for (let i = 0; i < handlers.length; i++) {
-                            handlers[i].onEnd();
-                        }
-                    });
-                } catch(e){
-                    console.log(e);
+            });
+
+            stream.on('end', () => {
+                for(let i = 0 ; i < handlers.length ; i++){
+                    handlers[i].onEnd();
                 }
-            })
+            });
+
+            stream.on('error', (error) => {
+                console.error('ERROR: ' + error);
+            });
         })
     }
 }
@@ -76,7 +74,7 @@ try {
     const client = new ApiClient(null);
     client.fetch("https://graph.irail.be/sncb/connections",
         [
-            //new MyMetadataApiHandler((metadata) => console.log(metadata), client, true),
-            new PaginationHandler((pages) => console.log(pages))
+            new MyMetadataApiHandler({metadataCallback: (metadata) => console.log(metadata), apiClient: client, followDocumentationLink: true}),
+            new PaginationHandler({pagedataCallback: (pages) => console.log(pages)})
         ]);
 }

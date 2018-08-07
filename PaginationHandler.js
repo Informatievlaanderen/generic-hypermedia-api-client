@@ -1,13 +1,9 @@
 "use strict";
 exports.__esModule = true;
 var PaginationHandler = /** @class */ (function () {
-    //TODO : use interface
-    function PaginationHandler(pagedataCallback) {
-        this.pagedataCallback = pagedataCallback;
+    function PaginationHandler(args) {
+        this.pagedataCallback = args.pagedataCallback;
     }
-    /*constructor(args: IPaginationHandlerArgs){
-        this.pagedataCallback = args.pagedataCallback();
-    }*/
     PaginationHandler.prototype.onFetch = function (response) {
         if (response.headers.get('link') !== null) {
             var links = response.headers.get('link').split(',');
