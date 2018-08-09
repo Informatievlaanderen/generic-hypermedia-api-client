@@ -15,8 +15,16 @@ export interface IApiHandler {
      * Called for each quad that is found in the body.
      * @param {RDF.Quad} quad An RDF quad.
      */
-
     onQuad(quad: RDF.Quad);
+
+    /**
+    * Called for each quad that is found in the body to check its predicate
+     * @param {RDF.Quad} quad an RDF quad.
+     * @param {any} dataCallback, called to return a match
+    * */
+    checkPredicates(quad: RDF.Quad, dataCallback: () => any);
+
+
 
     /**
      * Called when the body is finished, and no new quads will follow.

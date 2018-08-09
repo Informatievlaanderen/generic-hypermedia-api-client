@@ -2,18 +2,29 @@ import {IApiHandler} from "./IApiHandler";
 
 interface IPaginationHandlerArgs {
     pagedataCallback: () => any;
+    subjectStream: NodeJS.ReadableStream;
 }
 
 export class PaginationHandler implements IApiHandler {
     private pagedataCallback: any;
 
-    private next: string;
-    private last: string;
-    private first: string;
-    private prev: string;
+    private subjectURLs: Array<string>;
+    private myTriples: {[key: string]: {} } = {};
+    private subjectPageData: {[key: string]: {} } = {};
+
+    private pagedataFields: Array<string> = ['first', 'next', 'last', 'previous'];
+    // private next: string;   //If present, will be found in body of first fetch URL
+    // private last: string;
+    // private first: string;
+    // private prev: string;   //If present, will be found in body of first fetch URL
 
     constructor(args: IPaginationHandlerArgs){
         this.pagedataCallback = args.pagedataCallback;
+
+        this.subjectURLs = [];
+        args.subjectStream.on('data', (url) => {
+            this.subjectURLs.push(url);
+        });
     }
 
     onFetch(response: Response) {
@@ -35,28 +46,77 @@ export class PaginationHandler implements IApiHandler {
     }
 
     onQuad(quad: RDF.Quad) {
-        if(quad.predicate.value === ('http' || 'https' ) + '://www.w3.org/ns/hydra/core#first'){
-            this.first = quad.object.value;
-        }
-        if(quad.predicate.value === ('http' || 'https' )  + '://www.w3.org/ns/hydra/core#next'){
-            this.next = quad.object.value;
+        let urlMatched = false;
+        for(let index in this.subjectURLs){
+            const subjectURL = this.subjectURLs[index];
+            if(quad.subject.value === subjectURL){
+                urlMatched = true;
+                for(let subjectValue in this.myTriples){
+                    //If there's already data for the URL, move it to the subjectPageData
+                    if(subjectValue === subjectURL){
+                        const data = this.myTriples[subjectValue];
+                        Object.keys(data).forEach( (key) => {
+                            this.subjectPageData[key] = {objectValue: data[key], priority: index};
+                        });
+                        delete this.myTriples[subjectValue];
+                    }
+                }
+
+                //Process the quad and add its info to the subjectPageData
+                this.checkPredicates(quad, (pagedata) => {
+                    Object.keys(pagedata).forEach( (key) => {
+                        const pageDataPart = this.subjectPageData[key];
+                        if(!pageDataPart || pageDataPart["priority"] > index){
+                            this.subjectPageData[key] = {objectValue: pagedata[key], priority: index}
+                        }
+                    })
+                })
+            }
         }
 
-        if(quad.predicate.value === ('http' || 'https' ) + '://www.w3.org/ns/hydra/core#previous'){
-            this.prev = quad.object.value;
-        }
-
-        if(quad.predicate.value === ('http' || 'https' )  + '://www.w3.org/ns/hydra/core#last'){
-            this.last = quad.object.value;
+        //The URL has not been discovered (yet)
+        if(!urlMatched){
+            this.checkPredicates(quad, (pagedata) => {
+                Object.keys(pagedata).forEach( (key) => {
+                    if(!this.myTriples[quad.subject.value]){
+                        this.myTriples[quad.subject.value] = {};
+                    }
+                    this.myTriples[quad.subject.value][key] = pagedata[key];
+                })
+            })
         }
     }
 
+    checkPredicates(quad: RDF.Quad, dataCallback: () => any){
+        let match = {};
+        if(quad.predicate.value === 'http://www.w3.org/ns/hydra/core#first'){
+            match["first"] = quad.object.value;
+        }
+        if(quad.predicate.value === 'http://www.w3.org/ns/hydra/core#next'){
+            match["next"] = quad.object.value;
+        }
+
+        if(quad.predicate.value === 'http://www.w3.org/ns/hydra/core#previous'){
+            match["previous"] = quad.object.value;
+        }
+
+        if(quad.predicate.value === 'http://www.w3.org/ns/hydra/core#last'){
+            match["last"] = quad.object.value;
+        }
+
+        dataCallback(match);
+    }
+
     onEnd() {
-        this.pagedataCallback({
-            first: this.first,
-            next: this.next,
-            previous: this.prev,
-            last: this.last
-        });
+        let pagedataObject = {};
+        for(let index in this.pagedataFields){
+            if(this.subjectPageData[this.pagedataFields[index]] == undefined){
+                pagedataObject[this.pagedataFields[index]] = null;
+            } else {
+                pagedataObject[this.pagedataFields[index]] = this.subjectPageData[this.pagedataFields[index]]['objectValue'];
+            }
+        }
+
+        this.pagedataCallback(pagedataObject);
     }
 }
