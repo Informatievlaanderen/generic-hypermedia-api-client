@@ -1,7 +1,7 @@
 import {IApiHandler} from "./IApiHandler";
 import {ApiClient} from "./ApiClient";
 import * as RdfTerm from "rdf-string";
-import {blankNode, defaultGraph, literal, namedNode, quad} from "@rdfjs/data-model";
+import { namedNode } from "@rdfjs/data-model";
 const linkParser = require('parse-link-header');
 
 export interface IMetadataHandlerArgs {
