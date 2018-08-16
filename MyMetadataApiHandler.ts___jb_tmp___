@@ -1,0 +1,194 @@
+import {IApiHandler} from "./IApiHandler";
+import {ApiClient} from "./ApiClient";
+
+const linkParser = require('parse-link-header');
+
+export interface IMetadataHandlerArgs {
+    metadataCallback: () => any;
+    apiClient: ApiClient;
+    subjectStream: NodeJS.ReadableStream;
+    followDocumentationLink?: boolean;
+}
+
+export class MyMetadataApiHandler implements IApiHandler {
+
+    private metadataCallback: any;
+    private apiClient: ApiClient;
+    private followDocLink: boolean;
+    /*Boolean that indicates if a found documentation link has to be fetched*/
+
+    private subjectURLs: Array<string>;
+    /*Array with potential subjectURLs that need to be checked*/
+    private myQuads: { [key: string]: {} } = {};
+    private subjectMetadata: { [key: string]: {} } = {};
+
+    private baseIRI: string;
+
+    //Fields that will be searched for (see checkPredicates() method)
+    //If other fields or more fields need to be checked, please add them to this array too.
+    private metadataFields: Array<string> = ['apiDocumentation', 'apiTitle', 'apiContactName', 'apiContactEmail', 'apiContactPhoneNumber', 'temporal', 'spatial'];
+
+    constructor(args: IMetadataHandlerArgs) {
+        this.metadataCallback = args.metadataCallback;
+        this.apiClient = args.apiClient;
+        this.followDocLink = args.followDocumentationLink;
+
+        this.subjectURLs = [];
+        //Listener for subjectstream from client.
+        //Every time a new url is added to the stream, the fetch method from the client with this new url is executed.
+        args.subjectStream.on('data', (url) => {
+            this.subjectURLs.push(url);
+        });
+    }
+
+    onFetch(response: Response) {
+        //Check the header, and check its API documentation link.
+        if (response.headers.has('link')) {
+            if (!this.subjectMetadata['apiDocumentation']) {
+                this.subjectMetadata['apiDocumentation'] = {};
+            }
+
+            let object = linkParser(response.headers.get('link'));
+            let rel = Object.keys(object)[0];
+            let link = object[rel].url;
+
+            this.subjectMetadata['apiDocumentation'] = {objectValue: link, priority: 0};
+
+            if (this.followDocLink) {
+                this.apiClient.fetch(this.subjectMetadata['apiDocumentation'].objectValue, [this]);
+                this.apiClient.subjectStream.unshift(this.subjectMetadata['apiDocumentation'].objectValue);
+            }
+        }
+
+        this.baseIRI = response.url;
+    }
+
+    onQuad(quad: RDF.Quad) {
+        let urlMatched = false;
+        console.log(quad);
+        /*for(let index in this.subjectURLs){
+            let subjectURL = this.subjectURLs[index];
+
+            if(quad.subject.value === subjectURL){
+                urlMatched = true;
+                // Check if there's already data for this URL in myTriples
+                for(let subjectValue in this.myQuads){
+                    if(subjectURL === subjectValue){
+                        //Move metadata part from myTriples to subject_metadata
+                        const data = this.myQuads[subjectValue];
+                        Object.keys(data).forEach( (key) => {
+                            this.subjectMetadata[key] = { objectValue: data[key], priority: index};
+                        });
+                        delete this.myQuads[subjectValue];
+                    }
+                }
+
+                // Process the quad and if there is a match, add it to the SUBJECT_METADATA
+                this.checkPredicates( quad,(metadata) => {
+                    Object.keys(metadata).forEach( (key) => {
+                        const metadataPart = this.subjectMetadata[key];
+                        //Only add to subject_metadata is this part of data is new or has a lower (thus more important) priority
+                        if(!metadataPart || metadataPart["priority"] > index){
+                            if(key === 'apiDocumentation'){
+                                this.subjectMetadata[key] = {objectValue: metadata[key], priority: 0};
+                            } else {
+                                this.subjectMetadata[key] = {objectValue: metadata[key], priority: index+1};
+                            }
+                        }
+                    })
+                });
+            }
+        }*/
+
+        //Process quad and put matches in myTriples
+        if (!urlMatched) {
+            this.checkPredicates(quad, (metadata) => {
+                Object.keys(metadata).forEach((key) => {
+                    if (!this.myQuads[quad.subject.value]) {
+                        this.myQuads[quad.subject.value] = {};
+                    }
+                    this.myQuads[quad.subject.value][key] = metadata[key];
+                })
+            })
+        }
+    }
+
+    checkPredicates(quad: RDF.Quad, dataCallback: () => any) {
+        let match = {};
+
+        if (quad.predicate.value === 'http://www.w3.org/ns/hydra/core#apiDocumentation') {
+            //TODO : what with relative URLs?
+            match['apiDocumentation'] = this.baseIRI + quad.object.value;
+            if (this.followDocLink) {
+                this.apiClient.fetch(match['apiDocumentation'], [this]);
+                this.apiClient.subjectStream.unshift(match['apiDocumentation']);
+            }
+        }
+
+        ////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////
+        /*Quad {
+            subject: NamedNode { value: 'http://localhost:3001/api/documentation' },
+            predicate: NamedNode { value: 'https://schema.org/contactPoint' },
+            object: BlankNode { value: 'b7' },
+            graph: DefaultGraph { value: '' } }*/
+
+        /*Quad {
+            subject: BlankNode { value: 'b7' },
+            predicate: NamedNode { value: 'https://schema.org/website' },
+            object:
+                Literal {
+                value: 'https://example.org/helpdesk',
+                    datatype: NamedNode { value: 'http://www.w3.org/2001/XMLSchema#string' } },
+            graph: DefaultGraph { value: '' } }*/
+
+        ////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////
+
+        //TODO : which one or both?
+        if (quad.predicate.value == 'http://www.w3.org/ns/hydra/core#title') {
+            match["apiTitle"] = quad.object.value;
+        }
+
+        if (quad.predicate.value == 'http://purl.org/dc/terms/title') {
+            match["apiTitle"] = quad.object.value;
+        }
+
+        if (quad.predicate.value == 'https://schema.org/contactnaam') {
+            match["apiContactName"] = quad.object.value;
+        }
+
+        if (quad.predicate.value == 'https://schema.org/email') {
+            match["apiContactEmail"] = quad.object.value;
+        }
+
+        if (quad.predicate.value == 'http://schema.org/telephone') {
+            match["apiContactPhoneNumber"] = quad.object.value;
+        }
+
+        if (quad.predicate.value == 'http://purl.org/dc/terms/temporal') {
+            match["temporal"] = quad.object.value;
+        }
+
+        if (quad.predicate.value == 'http://purl.org/dc/terms/spatial') {
+            match["spatial"] = quad.object.value;
+        }
+        dataCallback(match);
+    }
+
+    // TODO: this metadatacallback is for emitting _all_ metadata at once,
+    // but if we want, we could have separate callbacks for each metadata type,
+    // then we could potentially invoke the callback much sooner.
+    onEnd() {
+        //Emit all discovered metadata in the callback
+        console.log(this.myQuads);
+        /*let metadataObject = {};
+        for(let index in this.metadataFields){
+            if(this.subjectMetadata[this.metadataFields[index]] == undefined){
+                metadataObject[this.metadataFields[index]] = null;
+            } else {
+                metadataObject[this.metadataFields[index]] = this.subjectMetadata[this.metadataFields[index]]['objectValue'];
+            }
+        }*/
+    }
+}

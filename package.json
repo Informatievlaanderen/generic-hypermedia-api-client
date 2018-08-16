@@ -5,7 +5,7 @@
   "main": "index.js",
   "jest": {
     "transform": {
-      "^.+\\.ts$": "<rootDir>/node_modules/ts-jest/preprocessor.js"
+      "^.+\\.ts$": "ts-jest"
     },
     "transformIgnorePatterns": [
       "[/\\\\]node_modules[/\\\\].+\\.(js|jsx)$"
@@ -13,10 +13,13 @@
     "testRegex": "(/test/.*|(\\.|/)(test|spec))\\.ts$",
     "moduleFileExtensions": [
       "ts",
-      "js"
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "node"
     ],
-    "collectCoverage": true,
-    "mapCoverage": true
+    "collectCoverage": true
   },
   "scripts": {
     "test": "jest ${1}",
@@ -30,16 +33,27 @@
   "author": "Dwight Van Lancker",
   "license": "ISC",
   "dependencies": {
+    "@rdfjs/data-model": "^1.1.0",
+    "accept-language-negotiator": "^1.0.1",
+    "content-type": "^1.0.4",
     "es6-promise": "^4.2.4",
     "isomorphic-fetch": "^2.2.1",
+    "memento-client": "^2.0.4",
+    "parse-link-header": "^1.0.1",
     "rdf": "^4.0.1",
+    "rdf-data-model": "^1.0.0",
     "rdf-ext": "^1.1.0",
     "rdf-formats-common": "^1.4.0",
     "rdf-js": "^1.0.1",
     "rdf-parser-jsonld": "^1.1.0",
-    "stream": "0.0.2"
+    "rdf-string": "^1.2.0",
+    "stream": "0.0.2",
+    "typescript": "^2.6.2"
   },
   "devDependencies": {
-    "@types/node": "^10.5.5"
+    "@types/jest": "^23.3.1",
+    "@types/node": "^10.5.5",
+    "jest": "^23.5.0",
+    "ts-jest": "^23.1.3"
   }
 }

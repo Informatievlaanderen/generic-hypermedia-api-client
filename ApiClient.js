@@ -1,12 +1,11 @@
 "use strict";
 exports.__esModule = true;
-var MyMetadataApiHandler_1 = require("./MyMetadataApiHandler");
-var PaginationHandler_1 = require("./PaginationHandler");
 require('es6-promise').polyfill();
 require('isomorphic-fetch');
 var RDF = require('rdf-ext');
 var formats = require('rdf-formats-common')(RDF);
 var stream = require('stream');
+var contentTypeParser = require('content-type');
 /**
  * An API Client is used to discover capabilities of a certain API.
  * It has an internal fetch method and RDF parser.
@@ -22,7 +21,8 @@ var ApiClient = /** @class */ (function () {
             this.parser = null;
         }
         this.subjectStream = new stream.Readable();
-        this.subjectStream._read = function () { };
+        this.subjectStream._read = function () {
+        };
         this.startURLAdded = false;
     }
     /**
@@ -32,55 +32,66 @@ var ApiClient = /** @class */ (function () {
      */
     ApiClient.prototype.fetch = function (url, handlers) {
         var _this = this;
-        this.fetcher(url).then(function (response) {
-            for (var i = 0; i < handlers.length; i++) {
-                handlers[i].onFetch(response);
+        var headers = {};
+        handlers.filter(function (handler) {
+            if (handler.constructor.name === 'LanguageHandler') {
+                headers['Accept-Language'] = handler.acceptLanguageHeader;
             }
-            if (!_this.startURLAdded) {
-                _this.subjectStream.unshift(response.url);
-                _this.startURLAdded = true;
+            else if (handler.constructor.name === 'VersioningHandler') {
+                headers['Accept-Datetime'] = handler.datetime; //NOT SENDING TO SERVER
             }
-            var contentType = response.headers.get('content-type').split(';')[0];
-            var parser = formats.parsers.find(contentType);
-            var stream = new parser.Impl(response.body);
-            stream.on('data', function (quad) {
-                if (quad.predicate.value === 'http://rdfs.org/ns/void#subset') {
-                    _this.subjectStream.unshift(quad.subject.value);
-                    _this.fetch(quad.subject.value, handlers);
+        });
+        //Fetch URL given as parameter
+        this.fetcher(url, { headers: headers }).then(function (response) {
+            //Each handlers has to execute his onFetch() method
+            try {
+                for (var i = 0; i < handlers.length; i++) {
+                    handlers[i].onFetch(response);
                 }
-                else {
-                    for (var i = 0; i < handlers.length; i++) {
-                        handlers[i].onQuad(quad);
+                //The startURL also need to be in the stream
+                //This only has to be done 1 time, at the beginning
+                if (!_this.startURLAdded) {
+                    _this.subjectStream.unshift(response.url);
+                    _this.startURLAdded = true;
+                }
+                try {
+                    var contentType = contentTypeParser.parse(response.headers.get('content-type')).type;
+                    var parser = formats.parsers.find(contentType);
+                    if (parser) {
+                        var stream_1 = new parser.Impl(response.body, { baseIRI: response.url });
+                        stream_1.on('data', function (quad) {
+                            //If there's a void:subset, we need to add the new URL to the stream and also check its content
+                            if (quad.predicate.value === 'http://rdfs.org/ns/void#subset') {
+                                _this.subjectStream.unshift(quad.subject.value);
+                                _this.fetch(quad.subject.value, handlers);
+                            }
+                            else {
+                                for (var i = 0; i < handlers.length; i++) {
+                                    handlers[i].onQuad(quad);
+                                }
+                            }
+                        });
+                        stream_1.on('end', function () {
+                            for (var i = 0; i < handlers.length; i++) {
+                                console.log('Stream is done for [' + handlers[i].constructor.name + ']');
+                                handlers[i].onEnd();
+                            }
+                        });
+                        stream_1.on('error', function (error) {
+                            stream_1.emit('end');
+                            console.error('ERROR (ApiClient): ' + error);
+                        });
                     }
                 }
-            });
-            stream.on('end', function () {
-                for (var i = 0; i < handlers.length; i++) {
-                    handlers[i].onEnd();
+                catch (e) {
+                    console.error('Error: ' + e.message);
                 }
-            });
-            stream.on('error', function (error) {
-                console.error('ERROR: ' + error);
-            });
+            }
+            catch (e) {
+                console.error('Error: ' + e.message);
+            }
         });
     };
     return ApiClient;
 }());
 exports.ApiClient = ApiClient;
-//TEST PROGRAM
-//https://datapiloten.be/parking/catalog.ttl
-//https://graph.irail.be/sncb/connections
-try {
-    var client = new ApiClient(null);
-    client.fetch("https://graph.irail.be/sncb/connections", [
-        new MyMetadataApiHandler_1.MyMetadataApiHandler({ metadataCallback: function (metadata) { return console.log(metadata); },
-            apiClient: client,
-            followDocumentationLink: true,
-            subjectStream: client.subjectStream
-        }),
-        new PaginationHandler_1.PaginationHandler({ pagedataCallback: function (pages) { return console.log(pages); },
-            subjectStream: client.subjectStream
-        })
-    ]);
-}
-finally { }

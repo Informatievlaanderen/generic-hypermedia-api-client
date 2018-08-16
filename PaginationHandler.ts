@@ -33,13 +33,13 @@ export class PaginationHandler implements IApiHandler {
             for(let i = 0 ; i < links.length ; i++){
                 let pieces = links[i].split(';');
                 if(pieces[1].indexOf('prev') >= 0){
-                    this.prev = pieces[0];
+                    this.subjectPageData['previous'] = {objectValue: pieces[0], priority: 0};
                 } else if(pieces[1].indexOf('first') >= 0){
-                    this.first = pieces[0];
+                    this.subjectPageData['first'] = {objectValue: pieces[0], priority: 0};
                 } else if(pieces[1].indexOf('last') >= 0){
-                    this.last = pieces[0];
+                    this.subjectPageData['last'] = {objectValue: pieces[0], priority: 0};
                 } else if(pieces[1].indexOf('next') >= 0){
-                    this.next = pieces[0];
+                    this.subjectPageData['next'] = {objectValue: pieces[0], priority: 0};
                 }
             }
         }
