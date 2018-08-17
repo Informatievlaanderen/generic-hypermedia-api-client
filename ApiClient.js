@@ -32,19 +32,28 @@ var ApiClient = /** @class */ (function () {
      */
     ApiClient.prototype.fetch = function (url, handlers) {
         var _this = this;
-        var headers = {};
+        var headers = new Headers();
         handlers.filter(function (handler) {
             if (handler.constructor.name === 'LanguageHandler') {
-                headers['Accept-Language'] = handler.acceptLanguageHeader;
+                var object = handler;
+                headers.append('Accept-Language', object.acceptLanguageHeader);
+                //headers['Accept-Language'] = handler.acceptLanguageHeader;
             }
             else if (handler.constructor.name === 'VersioningHandler') {
-                headers['Accept-Datetime'] = handler.datetime; //NOT SENDING TO SERVER
+                var object = handler;
+                if (object.datetime) {
+                    headers.append('Accept-Datetime', object.datetime);
+                }
+                else {
+                    headers.append('Link', object.version);
+                }
+                //headers['Accept-Datetime'] = handler.datetime; //NOT SENDING TO SERVER
             }
         });
         //Fetch URL given as parameter
         this.fetcher(url, { headers: headers }).then(function (response) {
-            //Each handlers has to execute his onFetch() method
             try {
+                //Each handler has to execute his onFetch() method
                 for (var i = 0; i < handlers.length; i++) {
                     handlers[i].onFetch(response);
                 }

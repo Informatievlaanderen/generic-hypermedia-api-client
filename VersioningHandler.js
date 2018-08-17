@@ -18,26 +18,31 @@ var VersioningHandler = /** @class */ (function () {
                 this.version = args.version;
             }
         }
+        if (!args) {
+            throw new Error('Please give a datetime or versionID as parameter for this building block');
+        }
         this.versionFound = false;
         this.stream = new stream_1.Readable({ objectMode: true });
         this.stream._read = function () { };
         this.versionCallback({ stream: this.stream });
     }
     VersioningHandler.prototype.onFetch = function (response) {
-        //We asked for a time-negotiated response, but didn't receive one.
-        if (this.datetime && response.headers && !response.headers.has('memento-datetime')) {
-            //Maybe the link header has some value
-            var links = response.headers.has('link') && parseLink(response.headers.get('link'));
-            if (links) {
-                var rel = Object.keys(links)[0];
-                var link = links[rel].url;
-                this.stream.unshift({ 'versionLink': link });
-            }
+        //We aksed for a time-negotiated response and received one
+        if (this.datetime && response.headers && response.headers.has('memento-datetime')) {
+            this.stream.unshift(response.headers.get('memento-datetime'));
+        }
+        else if (this.version && response.status === 307) {
+            //We asked for a specific version of the content so we are being redirected
+            //We need to fetch this redirected URL
+            //TODO :
         }
         else {
-            //TODO : what if there's a memento datetime?
+            //We asked for a time-negotiated response or for a specific version, but didn't receive one of them
+            //So we throw an error, because the server should do one of both.
+            throw new Error('Server must at least respond with a memento-datetime or redirect URL');
         }
     };
+    //TODO : check this method
     VersioningHandler.prototype.onQuad = function (quad) {
         var _this = this;
         //The quad with predicate prov:generatedAtTime or ver:relatedVersion has not been found yet, so store all triples in temporary object

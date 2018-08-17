@@ -1,5 +1,6 @@
 import {IApiHandler} from "./IApiHandler";
 import {LanguageHandler} from "./LanguageHandler";
+import {VersioningHandler} from "./VersioningHandler";
 
 require('es6-promise').polyfill();
 require('isomorphic-fetch');
@@ -46,19 +47,27 @@ export class ApiClient {
      * @param {IApiHandler[]} handlers An array of handlers to invoke on the response.
      */
     fetch(url: string, handlers: IApiHandler[]): void {
-        let headers = {};
+        let headers = new Headers();
         handlers.filter(handler => {
             if (handler.constructor.name === 'LanguageHandler') {
-                headers['Accept-Language'] = handler.acceptLanguageHeader;
+                let object = handler as LanguageHandler;
+                headers.append('Accept-Language', object.acceptLanguageHeader);
+                //headers['Accept-Language'] = handler.acceptLanguageHeader;
             } else if(handler.constructor.name === 'VersioningHandler'){
-                headers['Accept-Datetime'] = handler.datetime; //NOT SENDING TO SERVER
+                let object = handler as VersioningHandler;
+                if(object.datetime){
+                    headers.append('Accept-Datetime', object.datetime);
+                } else {
+                    headers.append('Link', object.version)
+                }
+                //headers['Accept-Datetime'] = handler.datetime; //NOT SENDING TO SERVER
             }
         });
 
         //Fetch URL given as parameter
         this.fetcher(url, {headers: headers}).then(response => {
-            //Each handlers has to execute his onFetch() method
             try {
+                //Each handler has to execute his onFetch() method
                 for (let i = 0; i < handlers.length; i++) {
                     handlers[i].onFetch(response);
                 }

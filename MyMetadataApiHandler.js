@@ -15,11 +15,14 @@ var MyMetadataApiHandler = /** @class */ (function () {
         this.API_CONTACT_NAME = data_model_1.namedNode('https://schema.org/contactnaam');
         this.API_CONTACT_EMAIL = data_model_1.namedNode('https://schema.org/email');
         this.API_CONTACT_TELEPHONE = data_model_1.namedNode('http://schema.org/telephone');
+        this.API_GEOMETRY = data_model_1.namedNode('http://www.w3.org/ns/locn#geometry');
+        this.API_START_DATE = data_model_1.namedNode('http://schema.org/startDate');
+        this.API_END_DATE = data_model_1.namedNode('http://schema.org/endDate');
         this.API_TEMPORAL = data_model_1.namedNode('http://purl.org/dc/terms/temporal');
         this.API_SPATIAL = data_model_1.namedNode('http://purl.org/dc/terms/spatial');
         this.API_CONTACT_POINT = data_model_1.namedNode('https://schema.org/contactPoint');
         this.myQuads = [];
-        this.metadataFields = ['apiDocumentation', 'apiTitle', 'apiContactName', 'apiContactEmail', 'apiContactTelephone', 'temporal', 'spatial'];
+        this.metadataFields = ['apiDocumentation', 'apiTitle', 'apiContactName', 'apiContactEmail', 'apiContactTelephone', /*'temporal', 'spatial',*/ 'geometry', 'startDate', 'endDate'];
         this.metadataCallback = args.metadataCallback;
         this.apiClient = args.apiClient;
         this.followDocLink = args.followDocumentationLink;
@@ -50,45 +53,48 @@ var MyMetadataApiHandler = /** @class */ (function () {
     MyMetadataApiHandler.prototype.onQuad = function (quad) {
         var _this = this;
         var urlMatched = false;
-        var _loop_1 = function (index) {
-            var subjectURL = this_1.subjectURLs[index];
+        Object.keys(this.subjectURLs).forEach(function (index) {
+            var subjectURL = _this.subjectURLs[index];
             if (RdfTerm.termToString(quad.subject) === subjectURL) {
                 urlMatched = true;
-                var _loop_2 = function (subjectValue) {
-                    if (subjectURL === subjectValue) {
-                        //Move metadata part from unidentifiedQuads to subject_metadata
-                        var data_1 = this_1.unidentifiedQuads[subjectValue];
-                        Object.keys(data_1).forEach(function (key) {
-                            _this.subjectMetadata[key] = { objectValue: data_1[key], priority: index };
-                        });
-                        delete this_1.unidentifiedQuads[subjectValue];
-                    }
-                };
                 // Check if there's already data for this URL in myTriples
-                for (var subjectValue in this_1.unidentifiedQuads) {
-                    _loop_2(subjectValue);
-                }
+                Object.keys(_this.unidentifiedQuads).forEach(function (subjectValue) {
+                    if (subjectValue === subjectURL) {
+                        var data_1 = _this.unidentifiedQuads[subjectValue];
+                        Object.keys(data_1).forEach(function (key) {
+                            if (!_this.subjectMetadata[key]) {
+                                _this.subjectMetadata[key] = { objectValue: data_1[key], priority: parseInt(index) + 1 };
+                            }
+                            else if (_this.subjectMetadata[key]['priority'] > parseInt(index) + 1) {
+                                _this.subjectMetadata[key] = {
+                                    objectValue: data_1[key],
+                                    priority: parseInt(index) + 1
+                                };
+                            }
+                        });
+                        delete _this.unidentifiedQuads[subjectValue];
+                    }
+                });
                 // Process the quad and if there is a match, add it to the SUBJECT_METADATA
-                this_1.checkPredicates(quad, function (metadata) {
+                _this.checkPredicates(quad, function (metadata) {
                     Object.keys(metadata).forEach(function (key) {
                         var metadataPart = _this.subjectMetadata[key];
                         //Only add to subject_metadata is this part of data is new or has a lower (thus more important) priority
-                        if (!metadataPart || metadataPart["priority"] > index) {
+                        if (!metadataPart || metadataPart["priority"] > parseInt(index) + 1) {
                             if (key === 'apiDocumentation') {
                                 _this.subjectMetadata[key] = { objectValue: metadata[key], priority: 0 };
                             }
                             else {
-                                _this.subjectMetadata[key] = { objectValue: RdfTerm.termToString(metadata[key].object), priority: parseInt(index) + 1 };
+                                _this.subjectMetadata[key] = {
+                                    objectValue: RdfTerm.termToString(metadata[key].object),
+                                    priority: parseInt(index) + 1
+                                };
                             }
                         }
                     });
                 });
             }
-        };
-        var this_1 = this;
-        for (var index in this.subjectURLs) {
-            _loop_1(index);
-        }
+        });
         //Process quad and put matches in unidentifiedQuads
         if (!urlMatched) {
             this.checkPredicates(quad, function (metadata) {
@@ -115,7 +121,7 @@ var MyMetadataApiHandler = /** @class */ (function () {
         if (quad.predicate.equals(this.API_TITLE_1) || quad.predicate.equals(this.API_TITLE_2)) {
             match['apiTitle'] = quad;
         }
-        if (quad.predicate.equals(this.API_CONTACT_POINT)) {
+        if (quad.predicate.equals(this.API_CONTACT_POINT) || quad.predicate.equals(this.API_TEMPORAL) || quad.predicate.equals(this.API_SPATIAL)) {
             //Check if there are triples with this quad its object as subject
             //If so, store them with the subject URL of this triple (schema:contactPoint)
             if (this.unidentifiedQuads.hasOwnProperty(RdfTerm.termToString(quad.object))) {
@@ -131,36 +137,27 @@ var MyMetadataApiHandler = /** @class */ (function () {
         }
         //Belongs to schema:contactPoint
         if (quad.predicate.equals(this.API_CONTACT_NAME)) {
-            Object.keys(this.myQuads).forEach(function (index) {
-                if (_this.myQuads[index].object.equals(quad.subject)) {
-                    quad.subject = _this.myQuads[index].subject;
-                }
-            });
             match['apiContactName'] = quad;
         }
         //Belongs to schema:contactPoint
         if (quad.predicate.equals(this.API_CONTACT_EMAIL)) {
-            Object.keys(this.myQuads).forEach(function (index) {
-                if (_this.myQuads[index].object.equals(quad.subject)) {
-                    quad.subject = _this.myQuads[index].subject;
-                }
-            });
             match['apiContactEmail'] = quad;
         }
         //Belongs to schema:contactPoint?
         if (quad.predicate.equals(this.API_CONTACT_TELEPHONE)) {
-            Object.keys(this.myQuads).forEach(function (index) {
-                if (_this.myQuads[index].object.equals(quad.subject)) {
-                    quad.subject = _this.myQuads[index].subject;
-                }
-            });
             match['apiContactTelephone'] = quad;
         }
-        if (quad.predicate.equals(this.API_TEMPORAL)) {
-            match['temporal'] = quad;
+        //TODO : fix this please
+        if (quad.predicate.equals(this.API_GEOMETRY)) {
+            match['geometry'] = quad;
         }
-        if (quad.predicate.equals(this.API_SPATIAL)) {
-            match['spatial'] = quad;
+        //TODO : fix this please
+        if (quad.predicate.equals(this.API_START_DATE)) {
+            match['startDate'] = quad;
+        }
+        //TODO : fix this please
+        if (quad.predicate.equals(this.API_END_DATE)) {
+            match['endDate'] = quad;
         }
         dataCallback(match);
     };
@@ -169,32 +166,32 @@ var MyMetadataApiHandler = /** @class */ (function () {
     // then we could potentially invoke the callback much sooner.
     MyMetadataApiHandler.prototype.onEnd = function () {
         var _this = this;
-        var _loop_3 = function (index) {
-            if (this_2.unidentifiedQuads.hasOwnProperty(RdfTerm.termToString(this_2.myQuads[index].object))) {
+        var _loop_1 = function (index) {
+            if (this_1.unidentifiedQuads.hasOwnProperty(RdfTerm.termToString(this_1.myQuads[index].object))) {
                 //There are quads that need to be transferred.
-                var values_2 = this_2.unidentifiedQuads[RdfTerm.termToString(this_2.myQuads[index].object)];
+                var values_2 = this_1.unidentifiedQuads[RdfTerm.termToString(this_1.myQuads[index].object)];
                 Object.keys(values_2).forEach(function (key) {
                     _this.subjectMetadata[key] = { objectValue: values_2[key], priority: 5 };
                 });
             }
         };
-        var this_2 = this;
-        //We have to check the quads in the unidentified quads because the last quad could has an object.value that is linked to the subject.value
-        //of quads stored in that object
+        var this_1 = this;
+        //We have to check the quads in the unidentified quads because the last quad could have an object.value that is linked to the subject.value
+        //of quads stored in the unidentified quads.
         for (var index in this.myQuads) {
-            _loop_3(index);
+            _loop_1(index);
         }
         //Emit all discovered metadata in the callback
-        /*let metadataObject = {};
-        for(let index in this.metadataFields){
-            if(this.subjectMetadata[this.metadataFields[index]] === undefined){
+        var metadataObject = {};
+        for (var index in this.metadataFields) {
+            if (this.subjectMetadata[this.metadataFields[index]] === undefined) {
                 metadataObject[this.metadataFields[index]] = null;
-            } else {
+            }
+            else {
                 metadataObject[this.metadataFields[index]] = this.subjectMetadata[this.metadataFields[index]]['objectValue'];
             }
         }
-        this.metadataCallback(metadataObject);*/
-        console.log(this.subjectMetadata);
+        this.metadataCallback(metadataObject);
     };
     return MyMetadataApiHandler;
 }());

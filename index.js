@@ -1,14 +1,14 @@
 "use strict";
 exports.__esModule = true;
 var ApiClient_1 = require("./ApiClient");
-var PaginationHandler_1 = require("./PaginationHandler");
+var VersioningHandler_1 = require("./VersioningHandler");
 //TEST PROGRAM
 //https://datapiloten.be/parking/catalog.ttl
 //https://graph.irail.be/sncb/connections
 //http://localhost:3001/api
 try {
     var client = new ApiClient_1.ApiClient(null);
-    client.fetch('https://graph.irail.be/sncb/connections', [
+    client.fetch('http://localhost:3001/api/versioning', [
         /*new MyMetadataApiHandler(
             {
                 metadataCallback: (metadata) => console.log(metadata),
@@ -16,11 +16,13 @@ try {
                 followDocumentationLink: true,
                 subjectStream: client.subjectStream
             }
-        ),*/
-        new PaginationHandler_1.PaginationHandler({
-            pagedataCallback: function (pagedata) { return console.log(pagedata); },
-            subjectStream: client.subjectStream
-        }) /*,
+        ),
+        new PaginationHandler(
+            {
+                pagedataCallback: (pagedata) => console.log(pagedata),
+                subjectStream: client.subjectStream
+            }
+        ),
         new LanguageHandler(
             {
                 languageCallback: (language) => {
@@ -32,17 +34,20 @@ try {
                         }
                     })
                 },
-                acceptLanguageHeader: 'nl'
+                acceptLanguageHeader: 'nl,en;q=0.8'
             }
-        ),
-        new VersioningHandler({
-            versionCallback: version => {
-                version.stream.on('data' , () => {
+        ),*/
+        new VersioningHandler_1.VersioningHandler({
+            versionCallback: function (version) {
+                version.stream.on('data', function () {
                     console.log('');
-                })
+                });
             },
-            datetime: new Date(2018, 8, 14 )
-        })*/
+            datetime: new Date(2018, 8, 14)
+            //version: '3.1'
+        })
     ]);
 }
-finally { }
+catch (e) {
+    console.log(e);
+}

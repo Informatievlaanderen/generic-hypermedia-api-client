@@ -13,7 +13,7 @@ import {VersioningHandler} from "./VersioningHandler";
 try {
     const client = new ApiClient(null);
 
-    client.fetch('https://graph.irail.be/sncb/connections',
+    client.fetch('http://localhost:3001/api/versioning',
         [
             /*new MyMetadataApiHandler(
                 {
@@ -22,13 +22,13 @@ try {
                     followDocumentationLink: true,
                     subjectStream: client.subjectStream
                 }
-            ),*/
+            ),
             new PaginationHandler(
                 {
                     pagedataCallback: (pagedata) => console.log(pagedata),
                     subjectStream: client.subjectStream
                 }
-            )/*,
+            ),
             new LanguageHandler(
                 {
                     languageCallback: (language) => {
@@ -40,9 +40,9 @@ try {
                             }
                         })
                     },
-                    acceptLanguageHeader: 'nl'
+                    acceptLanguageHeader: 'nl,en;q=0.8'
                 }
-            ),
+            ),*/
             new VersioningHandler({
                 versionCallback: version => {
                     version.stream.on('data' , () => {
@@ -50,7 +50,10 @@ try {
                     })
                 },
                 datetime: new Date(2018, 8, 14 )
-            })*/
+                //version: '3.1'
+            })
         ]
     );
+} catch (e) {
+    console.log(e);
 }
