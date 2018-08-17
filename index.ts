@@ -13,16 +13,16 @@ import {VersioningHandler} from "./VersioningHandler";
 try {
     const client = new ApiClient(null);
 
-    client.fetch('http://localhost:3001/api/versioning',
+    client.fetch('http://localhost:3001/api',
         [
-            /*new MyMetadataApiHandler(
+            new MyMetadataApiHandler(
                 {
                     metadataCallback: (metadata) => console.log(metadata),
                     apiClient: client,
                     followDocumentationLink: true,
                     subjectStream: client.subjectStream
                 }
-            ),
+            )/*,
             new PaginationHandler(
                 {
                     pagedataCallback: (pagedata) => console.log(pagedata),
@@ -42,7 +42,7 @@ try {
                     },
                     acceptLanguageHeader: 'nl,en;q=0.8'
                 }
-            ),*/
+            ),
             new VersioningHandler({
                 versionCallback: version => {
                     version.stream.on('data' , () => {
@@ -51,7 +51,7 @@ try {
                 },
                 datetime: new Date(2018, 8, 14 )
                 //version: '3.1'
-            })
+            })*/
         ]
     );
 } catch (e) {

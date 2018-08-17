@@ -1,40 +1,37 @@
 "use strict";
 exports.__esModule = true;
 var stream_1 = require("stream");
+var data_model_1 = require("@rdfjs/data-model");
 var parseLink = require('parse-link-header');
 var VersioningHandler = /** @class */ (function () {
     function VersioningHandler(args) {
+        this.DATETIME = data_model_1.namedNode('http://www.w3.org/ns/prov#generatedAtTime');
+        this.VERSION = data_model_1.namedNode('http://semweb.datasciencelab.be/ns/version/#relatedVersion');
         this.myQuads = {}; //Key will be graph ID
         this.versionCallback = args.versionCallback;
-        if (args.datetime && args.version) {
-            throw new Error('This building block requires either a datetime or a version identification, not both');
-        }
-        //If a datetime is given as parameter, it means TEMPORAL versioning. If a version ID is given, it means ATEMPORAL versioning.
-        if (args.datetime || args.version) {
-            if (args.datetime) {
-                this.datetime = args.datetime;
-            }
-            else if (args.version) {
-                this.version = args.version;
-            }
-        }
         if (!args) {
-            throw new Error('Please give a datetime or versionID as parameter for this building block');
+            throw new Error('Please give a callback and datetime as parameters please');
+        }
+        if (!args.datetime) {
+            throw new Error('This building block requires a datetime');
+        }
+        else {
+            this.datetime = args.datetime;
         }
         this.versionFound = false;
         this.stream = new stream_1.Readable({ objectMode: true });
         this.stream._read = function () { };
         this.versionCallback({ stream: this.stream });
     }
+    //TODO!
     VersioningHandler.prototype.onFetch = function (response) {
         //We aksed for a time-negotiated response and received one
         if (this.datetime && response.headers && response.headers.has('memento-datetime')) {
             this.stream.unshift(response.headers.get('memento-datetime'));
         }
         else if (this.version && response.status === 307) {
-            //We asked for a specific version of the content so we are being redirected
-            //We need to fetch this redirected URL
-            //TODO :
+            console.log("MA YES E");
+            //TODO : JUST STREAM IT
         }
         else {
             //We asked for a time-negotiated response or for a specific version, but didn't receive one of them
@@ -64,11 +61,11 @@ var VersioningHandler = /** @class */ (function () {
     VersioningHandler.prototype.checkPredicates = function (quad, dataCallback) {
         var triple = {};
         if (!this.versionFound) {
-            if (this.datetime && quad.predicate.value == 'http://www.w3.org/ns/prov#generatedAtTime') {
+            if (this.datetime && quad.predicate.equals(this.DATETIME)) {
                 this.graphID = quad.subject.value;
                 this.versionFound = true;
             }
-            else if (this.version && quad.predicate.value == 'http://semweb.datasciencelab.be/ns/version/#relatedVersion') {
+            else if (this.version && quad.predicate.equals(this.VERSION)) {
                 //TODO
             }
             else {

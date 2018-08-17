@@ -57,19 +57,9 @@ export class PaginationHandler implements IApiHandler {
         let urlMatched = false;
         for(let index in this.subjectURLs){
             const subjectURL = this.subjectURLs[index];
+
             if(quad.subject.value === subjectURL){
                 urlMatched = true;
-                for(let subjectValue in this.myTriples){
-                    //If there's already data for the URL, move it to the subjectPageData
-                    if(subjectValue === subjectURL){
-                        const data = this.myTriples[subjectValue];
-                        Object.keys(data).forEach( (key) => {
-                            this.subjectPageData[key] = {objectValue: data[key], priority: index};
-                        });
-                        delete this.myTriples[subjectValue];
-                    }
-                }
-
                 //Process the quad and add its info to the subjectPageData
                 this.checkPredicates(quad, (pagedata) => {
                     Object.keys(pagedata).forEach( (key) => {
@@ -79,6 +69,17 @@ export class PaginationHandler implements IApiHandler {
                         }
                     })
                 })
+            }
+
+            for(let subjectValue in this.myTriples){
+                //If there's already data for the URL, move it to the subjectPageData
+                if(subjectValue === subjectURL){
+                    const data = this.myTriples[subjectValue];
+                    Object.keys(data).forEach( (key) => {
+                        this.subjectPageData[key] = {objectValue: data[key], priority: index};
+                    });
+                    delete this.myTriples[subjectValue];
+                }
             }
         }
 

@@ -48,19 +48,6 @@ var PaginationHandler = /** @class */ (function () {
             var subjectURL = this_1.subjectURLs[index];
             if (quad.subject.value === subjectURL) {
                 urlMatched = true;
-                var _loop_2 = function (subjectValue) {
-                    //If there's already data for the URL, move it to the subjectPageData
-                    if (subjectValue === subjectURL) {
-                        var data_1 = this_1.myTriples[subjectValue];
-                        Object.keys(data_1).forEach(function (key) {
-                            _this.subjectPageData[key] = { objectValue: data_1[key], priority: index };
-                        });
-                        delete this_1.myTriples[subjectValue];
-                    }
-                };
-                for (var subjectValue in this_1.myTriples) {
-                    _loop_2(subjectValue);
-                }
                 //Process the quad and add its info to the subjectPageData
                 this_1.checkPredicates(quad, function (pagedata) {
                     Object.keys(pagedata).forEach(function (key) {
@@ -70,6 +57,19 @@ var PaginationHandler = /** @class */ (function () {
                         }
                     });
                 });
+            }
+            var _loop_2 = function (subjectValue) {
+                //If there's already data for the URL, move it to the subjectPageData
+                if (subjectValue === subjectURL) {
+                    var data_1 = this_1.myTriples[subjectValue];
+                    Object.keys(data_1).forEach(function (key) {
+                        _this.subjectPageData[key] = { objectValue: data_1[key], priority: index };
+                    });
+                    delete this_1.myTriples[subjectValue];
+                }
+            };
+            for (var subjectValue in this_1.myTriples) {
+                _loop_2(subjectValue);
             }
         };
         var this_1 = this;
