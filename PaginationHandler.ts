@@ -24,8 +24,12 @@ export class PaginationHandler implements IApiHandler {
         this.pagedataCallback = args.pagedataCallback;
 
         this.subjectURLs = [];
-        args.subjectStream.on('data', (url) => {
-            this.subjectURLs.push(url);
+        args.subjectStream.on('data', (object) => {
+            if(object['url']){
+                this.subjectURLs.push(object['url']);
+            } else if(object['apiDoc']){
+                this.subjectURLs.unshift(object['apiDoc']);
+            }
         });
     }
 

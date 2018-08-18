@@ -19,25 +19,26 @@ export class MyMetadataApiHandler implements IApiHandler {
     private followDocLink: boolean;    //Boolean that indicates if a found documentation link has to be fetched
 
     private subjectURLs: Array<string>; //All URLs that need to be checked against.
-    private unidentifiedQuads: { [key: string]: {} } = {};    //Contains all quads whose URL (subject) has not been discovered (yet).
+    private unidentifiedQuads: { [key: string]: [] } = {};    //Contains all quads whose URL (subject) has not been discovered (yet).
+    private identifiedQuads: { [key: string]: [] } = {};
     private subjectMetadata: { [key: string]: {} } = {};    //Object that contains THE information that will be returned to the client
 
     private baseIRI: string;
 
     //Constants
-    private readonly API_DOCUMENTATION = namedNode('http://www.w3.org/ns/hydra/core#apiDocumentation');
-    private readonly API_TITLE_1 = namedNode('http://purl.org/dc/terms/title');
-    private readonly API_TITLE_2 = namedNode('http://www.w3.org/ns/hydra/core#title');
-    private readonly API_CONTACT_NAME = namedNode('https://schema.org/contactnaam');
-    private readonly API_CONTACT_EMAIL = namedNode('https://schema.org/email');
-    private readonly API_CONTACT_TELEPHONE = namedNode('http://schema.org/telephone');
-    private readonly API_GEOMETRY = namedNode('http://www.w3.org/ns/locn#geometry');
-    private readonly API_START_DATE = namedNode('http://schema.org/startDate');
-    private readonly API_END_DATE = namedNode('http://schema.org/endDate')
+    private static readonly API_DOCUMENTATION = namedNode('http://www.w3.org/ns/hydra/core#apiDocumentation');
+    private static readonly API_TITLE_1 = namedNode('http://purl.org/dc/terms/title');
+    private static readonly API_TITLE_2 = namedNode('http://www.w3.org/ns/hydra/core#title');
+    private static readonly API_CONTACT_NAME = namedNode('https://schema.org/contactnaam');
+    private static readonly API_CONTACT_EMAIL = namedNode('https://schema.org/email');
+    private static readonly API_CONTACT_TELEPHONE = namedNode('http://schema.org/telephone');
+    private static readonly API_GEOMETRY = namedNode('http://www.w3.org/ns/locn#geometry');
+    private static readonly API_START_DATE = namedNode('http://schema.org/startDate');
+    private static readonly API_END_DATE = namedNode('http://schema.org/endDate')
 
-    private readonly API_TEMPORAL = namedNode('http://purl.org/dc/terms/temporal');
-    private readonly API_SPATIAL = namedNode('http://purl.org/dc/terms/spatial');
-    private readonly API_CONTACT_POINT = namedNode('https://schema.org/contactPoint');
+    private static readonly API_TEMPORAL = namedNode('http://purl.org/dc/terms/temporal');
+    private static readonly API_SPATIAL = namedNode('http://purl.org/dc/terms/spatial');
+    private static readonly API_CONTACT_POINT = namedNode('https://schema.org/contactPoint');
 
     private myQuads: Array<any> = [];
 
@@ -52,8 +53,12 @@ export class MyMetadataApiHandler implements IApiHandler {
         this.subjectURLs = [];
         //Listener for subjectstream from client.
         //Every time a new url is added to the stream, the fetch method from the client with this new url is executed.
-        args.subjectStream.on('data', (url) => {
-            this.subjectURLs.push(url);
+        args.subjectStream.on('data', (object) => {
+            if(object['url']){
+                this.subjectURLs.push(object['url']);
+            } else if(object['apiDoc']){
+                this.subjectURLs.unshift(object['apiDoc']);
+            }
         });
 
     }
@@ -61,20 +66,20 @@ export class MyMetadataApiHandler implements IApiHandler {
     onFetch(response: Response) {
         //Check the header, and check its API documentation link.
         if (response.headers.has('link')) {
-            if (!this.subjectMetadata['apiDocumentation']) {
-                this.subjectMetadata['apiDocumentation'] = {};
+            if (!this.identifiedQuads['apiDocumentation']) {
+                this.identifiedQuads['apiDocumentation'] = [];
             }
 
             let object = linkParser(response.headers.get('link'));
             let rel = Object.keys(object)[0];
             let link = object[rel].url;
 
-            this.subjectMetadata['apiDocumentation'] = {objectValue: link, priority: 0};
-
-            if (this.followDocLink) {
-                this.apiClient.fetch(this.subjectMetadata['apiDocumentation'].objectValue, [this]);
-                this.apiClient.subjectStream.unshift(this.subjectMetadata['apiDocumentation'].objectValue);
+            const priority = this.subjectURLs.indexOf(response.url);
+            if(priority >= 0){
+                this.identifiedQuads['apiDocumentation'].push({ value: link, priority: priority+1});
             }
+
+
         }
 
         this.baseIRI = response.url;
@@ -83,59 +88,58 @@ export class MyMetadataApiHandler implements IApiHandler {
     onQuad(quad: RDF.Quad) {
         let urlMatched = false;
 
-        Object.keys(this.subjectURLs).forEach((index) => {
-            let subjectURL = this.subjectURLs[index];
+        for (let index in this.subjectURLs) {
+            const subjectURL = this.subjectURLs[index];
 
+            //The subject of the quad is known, so process this quad and if data, store it in identified quads
             if (RdfTerm.termToString(quad.subject) === subjectURL) {
                 urlMatched = true;
-                // Check if there's already data for this URL in myTriples
-                Object.keys(this.unidentifiedQuads).forEach((subjectValue: string) => {
-                    if (subjectValue === subjectURL) {
-                        const data = this.unidentifiedQuads[subjectValue];
-                        Object.keys(data).forEach((key) => {
-                            if(!this.subjectMetadata[key]){
-                                this.subjectMetadata[key] = {objectValue: data[key], priority: parseInt(index) + 1};
-                            } else if(this.subjectMetadata[key]['priority'] > parseInt(index)+1){
-                                this.subjectMetadata[key] = {
-                                    objectValue : data[key],
-                                    priority: parseInt(index)+1
-                                }
-                            }
-                        });
-                        delete this.unidentifiedQuads[subjectValue];
-                    }
-                });
+                this.checkPredicates(quad, (data) => {
+                    if (Object.keys(data).length > 0) {
+                        const predicateVal = Object.keys(data)[0];
 
-                // Process the quad and if there is a match, add it to the SUBJECT_METADATA
-                this.checkPredicates(quad, (metadata) => {
-                    Object.keys(metadata).forEach((key) => {
-                        const metadataPart = this.subjectMetadata[key];
-
-                        //Only add to subject_metadata is this part of data is new or has a lower (thus more important) priority
-                        if (!metadataPart || metadataPart["priority"] > parseInt(index)+1) {
-                            if (key === 'apiDocumentation') {
-                                this.subjectMetadata[key] = {objectValue: metadata[key], priority: 0};
-                            } else {
-                                this.subjectMetadata[key] = {
-                                    objectValue: RdfTerm.termToString(metadata[key].object),
-                                    priority: parseInt(index) + 1
-                                };
-                            }
+                        if (!this.identifiedQuads[predicateVal]) {
+                            this.identifiedQuads[predicateVal] = [];
                         }
-                    })
+
+                        this.identifiedQuads[predicateVal].push({value: data[predicateVal], priority: parseInt(index)+1});     //TODO: info of api doc has bigger priority
+                    }
                 });
             }
-        });
 
-        //Process quad and put matches in unidentifiedQuads
-        if (!urlMatched) {
-            this.checkPredicates(quad, (metadata) => {
-                Object.keys(metadata).forEach((key) => {
-                    if (!this.unidentifiedQuads[RdfTerm.termToString(metadata[key].subject)]) {
-                        this.unidentifiedQuads[RdfTerm.termToString(metadata[key].subject)] = {};
+            //For every URL in subjectURLs we have to check if there are quads in unidentified quads.
+            //If so, then move them to identified quads
+            for (let subjectVal in this.unidentifiedQuads) {
+                if (subjectVal === subjectURL) {
+                    for (let index in this.unidentifiedQuads[subjectVal]) {
+                        const object = this.unidentifiedQuads[subjectVal][index];
+                        if (!this.identifiedQuads[object['predicate']]) {
+                            this.identifiedQuads[object['predicate']] = [];
+                        }
+
+                        this.identifiedQuads[object['predicate']].push({
+                            value: object['value'],
+                            priority: parseInt(index)+1
+                        });
                     }
-                    this.unidentifiedQuads[RdfTerm.termToString(metadata[key].subject)][key] = RdfTerm.termToString(metadata[key].object);
-                })
+                }
+            }
+        }
+
+        if (!urlMatched) {
+            this.checkPredicates(quad, (data) => {
+                if (Object.keys(data).length > 0) {
+                    const predicateVal = Object.keys(data)[0];
+
+                    if (!this.unidentifiedQuads[RdfTerm.termToString(quad.subject)]) {
+                        this.unidentifiedQuads[RdfTerm.termToString(quad.subject)] = [];
+                    }
+
+                    this.unidentifiedQuads[RdfTerm.termToString(quad.subject)].push({
+                        predicate: predicateVal,
+                        value: data[predicateVal]
+                    });
+                }
             })
         }
     }
@@ -143,62 +147,47 @@ export class MyMetadataApiHandler implements IApiHandler {
     checkPredicates(quad: RDF.Quad, dataCallback: () => any) {
         let match = {};
 
-        if (quad.predicate.equals(this.API_DOCUMENTATION)) {
+        if (quad.predicate.equals(MyMetadataApiHandler.API_DOCUMENTATION)) {
             match['apiDocumentation'] = this.baseIRI + quad.object.value;
-            if (this.followDocLink) {
-                this.apiClient.fetch(match['apiDocumentation'], [this]);
-                this.apiClient.subjectStream.unshift(match['apiDocumentation']);
-                this.followDocLink = false;
-            }
+
         }
 
-        if (quad.predicate.equals(this.API_TITLE_1) || quad.predicate.equals(this.API_TITLE_2)) {
-            match['apiTitle'] = quad;
+        if (quad.predicate.equals(MyMetadataApiHandler.API_TITLE_1) || quad.predicate.equals(MyMetadataApiHandler.API_TITLE_2)) {
+            match['apiTitle'] = RdfTerm.termToString(quad.object);
         }
 
-        if (quad.predicate.equals(this.API_CONTACT_POINT) || quad.predicate.equals(this.API_TEMPORAL) || quad.predicate.equals(this.API_SPATIAL)) {
+        if (quad.predicate.equals(MyMetadataApiHandler.API_CONTACT_POINT) || quad.predicate.equals(MyMetadataApiHandler.API_TEMPORAL) || quad.predicate.equals(MyMetadataApiHandler.API_SPATIAL)) {
             //Check if there are triples with this quad its object as subject
             //If so, store them with the subject URL of this triple (schema:contactPoint)
-
-            if (this.unidentifiedQuads.hasOwnProperty(RdfTerm.termToString(quad.object))) {
-                let values = this.unidentifiedQuads[RdfTerm.termToString(quad.object)];
-                Object.keys(values).forEach((key) => {
-                    if (!this.unidentifiedQuads[RdfTerm.termToString(quad.subject)]) {
-                        this.unidentifiedQuads[RdfTerm.termToString(quad.subject)] = {};
-                    }
-                    this.unidentifiedQuads[RdfTerm.termToString(quad.subject)][key] = values[key];
-                });
-            }
-
             this.myQuads.push(quad);
         }
 
         //Belongs to schema:contactPoint
-        if (quad.predicate.equals(this.API_CONTACT_NAME)) {
-            match['apiContactName'] = quad;
+        if (quad.predicate.equals(MyMetadataApiHandler.API_CONTACT_NAME)) {
+            match['apiContactName'] = RdfTerm.termToString(quad.object);
         }
 
         //Belongs to schema:contactPoint
-        if (quad.predicate.equals(this.API_CONTACT_EMAIL)) {
-            match['apiContactEmail'] = quad;
+        if (quad.predicate.equals(MyMetadataApiHandler.API_CONTACT_EMAIL)) {
+            match['apiContactEmail'] = RdfTerm.termToString(quad.object);
         }
 
         //Belongs to schema:contactPoint?
-        if (quad.predicate.equals(this.API_CONTACT_TELEPHONE)) {
-            match['apiContactTelephone'] = quad;
+        if (quad.predicate.equals(MyMetadataApiHandler.API_CONTACT_TELEPHONE)) {
+            match['apiContactTelephone'] = RdfTerm.termToString(quad.object);
         }
 
         //TODO : fix this please
-        if(quad.predicate.equals(this.API_GEOMETRY)){
-            match['geometry'] = quad;
+        if (quad.predicate.equals(MyMetadataApiHandler.API_GEOMETRY)) {
+            match['geometry'] = RdfTerm.termToString(quad.object);
         }
         //TODO : fix this please
-        if(quad.predicate.equals(this.API_START_DATE)){
-            match['startDate'] = quad;
+        if (quad.predicate.equals(MyMetadataApiHandler.API_START_DATE)) {
+            match['startDate'] = RdfTerm.termToString(quad.object);
         }
         //TODO : fix this please
-        if(quad.predicate.equals(this.API_END_DATE)){
-            match['endDate'] = quad;
+        if (quad.predicate.equals(MyMetadataApiHandler.API_END_DATE)) {
+            match['endDate'] = RdfTerm.termToString(quad.object);
         }
 
         dataCallback(match);
@@ -210,26 +199,62 @@ export class MyMetadataApiHandler implements IApiHandler {
     onEnd() {
         //We have to check the quads in the unidentified quads because the last quad could have an object.value that is linked to the subject.value
         //of quads stored in the unidentified quads.
-        for (let index in this.myQuads) {
-            if (this.unidentifiedQuads.hasOwnProperty(RdfTerm.termToString(this.myQuads[index].object))) {
-                //There are quads that need to be transferred.
-                let values = this.unidentifiedQuads[RdfTerm.termToString(this.myQuads[index].object)];
-                Object.keys(values).forEach((key) => {
-                    this.subjectMetadata[key] = {objectValue: values[key], priority: 5};
-                })
+        for (let i in this.myQuads) {
+            const quad = this.myQuads[i];
+            if (this.unidentifiedQuads.hasOwnProperty(RdfTerm.termToString(quad.object))) {
+                const priority = this.subjectURLs.indexOf(RdfTerm.termToString(quad.subject));
+                if (priority >= 0) {
+                    let objects = this.unidentifiedQuads[RdfTerm.termToString(quad.object)];
+                    for (let j in objects) {
+                        const object = objects[j];
 
+                        if (!this.identifiedQuads[object['predicate']]) {
+                            this.identifiedQuads[object['predicate']] = [];
+                        }
+
+                        this.identifiedQuads[object['predicate']].push({value: object['value'], priority: priority+1});
+                    }
+                    delete this.unidentifiedQuads[RdfTerm.termToString(quad.object)];
+                }
             }
         }
 
-        //Emit all discovered metadata in the callback
         let metadataObject = {};
-        for(let index in this.metadataFields){
-            if(this.subjectMetadata[this.metadataFields[index]] === undefined){
-                metadataObject[this.metadataFields[index]] = null;
-            } else {
-                metadataObject[this.metadataFields[index]] = this.subjectMetadata[this.metadataFields[index]]['objectValue'];
+        for (let i in this.metadataFields) {
+            const metadata = this.metadataFields[i];
+            if (this.identifiedQuads.hasOwnProperty(metadata)) {
+                const values = this.identifiedQuads[metadata];
+
+                let valueWithHighestPriority = values[0]['value'];
+                let highestPriority = values[0]['priority'];
+
+                for (let j = 1; j < values.length; j++) {
+                    if (values[j]['priority'] < highestPriority) {
+                        highestPriority = values[j]['priority'];
+                        valueWithHighestPriority = values[j]['value'];
+                    }
+                }
+
+                metadataObject[metadata] = valueWithHighestPriority;
+                //delete this.identifiedQuads[metadata];
             }
         }
-        this.metadataCallback(metadataObject);
+
+        if (metadataObject['apiDocumentation']) {
+            if (this.followDocLink) {
+                this.apiClient.fetch(metadataObject['apiDocumentation'], [this]);
+                this.apiClient.subjectStream.unshift({apiDoc: metadataObject['apiDocumentation']});
+                this.followDocLink = false;
+            } else {
+                if (Object.keys(metadataObject).length > 0) {
+                    this.metadataCallback(metadataObject);
+                }
+            }
+        } else {
+
+            if(Object.keys(metadataObject).length > 0){
+                this.metadataCallback(metadataObject);
+            }
+        }
     }
 }

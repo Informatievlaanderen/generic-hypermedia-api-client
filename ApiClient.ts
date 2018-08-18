@@ -34,7 +34,7 @@ export class ApiClient {
             this.fetcher = fetch;
             this.parser = null;
         }
-        this.subjectStream = new stream.Readable();
+        this.subjectStream = new stream.Readable({ objectMode: true});
         this.subjectStream._read = () => {
         };
 
@@ -52,7 +52,6 @@ export class ApiClient {
             if (handler.constructor.name === 'LanguageHandler') {
                 let object = handler as LanguageHandler;
                 headers.append('Accept-Language', object.acceptLanguageHeader);
-                //headers['Accept-Language'] = handler.acceptLanguageHeader;
             } else if(handler.constructor.name === 'VersioningHandler'){
                 let object = handler as VersioningHandler;
                 if(object.datetime){
@@ -60,23 +59,22 @@ export class ApiClient {
                 } else {
                     headers.append('Link', object.version)
                 }
-                //headers['Accept-Datetime'] = handler.datetime; //NOT SENDING TO SERVER
             }
         });
 
         //Fetch URL given as parameter
         this.fetcher(url, {headers: headers}).then(response => {
             try {
-                //Each handler has to execute his onFetch() method
-                for (let i = 0; i < handlers.length; i++) {
-                    handlers[i].onFetch(response);
-                }
-
                 //The startURL also need to be in the stream
                 //This only has to be done 1 time, at the beginning
                 if (!this.startURLAdded) {
-                    this.subjectStream.unshift(response.url);
+                    this.subjectStream.unshift({url: response.url});
                     this.startURLAdded = true;
+                }
+
+                //Each handler has to execute his onFetch() method
+                for (let i = 0; i < handlers.length; i++) {
+                    handlers[i].onFetch(response);
                 }
 
                 try {
@@ -88,7 +86,7 @@ export class ApiClient {
                         stream.on('data', (quad) => {
                             //If there's a void:subset, we need to add the new URL to the stream and also check its content
                             if (quad.predicate.value === 'http://rdfs.org/ns/void#subset') {
-                                this.subjectStream.unshift(quad.subject.value);
+                                this.subjectStream.unshift({url: quad.subject.value});
                                 this.fetch(quad.subject.value, handlers);
                             } else {
                                 for (let i = 0; i < handlers.length; i++) {

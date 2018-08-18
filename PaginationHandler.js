@@ -13,8 +13,13 @@ var PaginationHandler = /** @class */ (function () {
         this.pagedataFields = ['first', 'next', 'last', 'prev'];
         this.pagedataCallback = args.pagedataCallback;
         this.subjectURLs = [];
-        args.subjectStream.on('data', function (url) {
-            _this.subjectURLs.push(url);
+        args.subjectStream.on('data', function (object) {
+            if (object['url']) {
+                _this.subjectURLs.push(object['url']);
+            }
+            else if (object['apiDoc']) {
+                _this.subjectURLs.unshift(object['apiDoc']);
+            }
         });
     }
     PaginationHandler.prototype.onFetch = function (response) {

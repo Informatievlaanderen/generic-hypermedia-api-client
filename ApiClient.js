@@ -20,7 +20,7 @@ var ApiClient = /** @class */ (function () {
             this.fetcher = fetch;
             this.parser = null;
         }
-        this.subjectStream = new stream.Readable();
+        this.subjectStream = new stream.Readable({ objectMode: true });
         this.subjectStream._read = function () {
         };
         this.startURLAdded = false;
@@ -37,7 +37,6 @@ var ApiClient = /** @class */ (function () {
             if (handler.constructor.name === 'LanguageHandler') {
                 var object = handler;
                 headers.append('Accept-Language', object.acceptLanguageHeader);
-                //headers['Accept-Language'] = handler.acceptLanguageHeader;
             }
             else if (handler.constructor.name === 'VersioningHandler') {
                 var object = handler;
@@ -47,21 +46,20 @@ var ApiClient = /** @class */ (function () {
                 else {
                     headers.append('Link', object.version);
                 }
-                //headers['Accept-Datetime'] = handler.datetime; //NOT SENDING TO SERVER
             }
         });
         //Fetch URL given as parameter
         this.fetcher(url, { headers: headers }).then(function (response) {
             try {
-                //Each handler has to execute his onFetch() method
-                for (var i = 0; i < handlers.length; i++) {
-                    handlers[i].onFetch(response);
-                }
                 //The startURL also need to be in the stream
                 //This only has to be done 1 time, at the beginning
                 if (!_this.startURLAdded) {
-                    _this.subjectStream.unshift(response.url);
+                    _this.subjectStream.unshift({ url: response.url });
                     _this.startURLAdded = true;
+                }
+                //Each handler has to execute his onFetch() method
+                for (var i = 0; i < handlers.length; i++) {
+                    handlers[i].onFetch(response);
                 }
                 try {
                     var contentType = contentTypeParser.parse(response.headers.get('content-type')).type;
@@ -71,7 +69,7 @@ var ApiClient = /** @class */ (function () {
                         stream_1.on('data', function (quad) {
                             //If there's a void:subset, we need to add the new URL to the stream and also check its content
                             if (quad.predicate.value === 'http://rdfs.org/ns/void#subset') {
-                                _this.subjectStream.unshift(quad.subject.value);
+                                _this.subjectStream.unshift({ url: quad.subject.value });
                                 _this.fetch(quad.subject.value, handlers);
                             }
                             else {
