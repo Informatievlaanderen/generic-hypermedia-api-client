@@ -1,26 +1,26 @@
 "use strict";
 exports.__esModule = true;
 var ApiClient_1 = require("./ApiClient");
-var MyMetadataApiHandler_1 = require("./MyMetadataApiHandler");
+var PaginationHandler_1 = require("./PaginationHandler");
 //TEST PROGRAM
 //https://datapiloten.be/parking/catalog.ttl
 //https://graph.irail.be/sncb/connections
 //http://localhost:3001/api
 try {
     var client = new ApiClient_1.ApiClient(null);
-    client.fetch('http://localhost:3001/api', [
-        new MyMetadataApiHandler_1.MyMetadataApiHandler({
-            metadataCallback: function (metadata) { return console.log(metadata); },
-            apiClient: client,
-            followDocumentationLink: true,
-            subjectStream: client.subjectStream
-        }) /*,
-        new PaginationHandler(
+    client.fetch('http://localhost:3001/api/pagination', [
+        /*new MyMetadataApiHandler(
             {
-                pagedataCallback: (pagedata) => console.log(pagedata),
+                metadataCallback: (metadata) => console.log(metadata),
+                apiClient: client,
+                followDocumentationLink: true,
                 subjectStream: client.subjectStream
             }
-        ),
+        ),*/
+        new PaginationHandler_1.PaginationHandler({
+            pagedataCallback: function (pagedata) { return console.log(pagedata); },
+            subjectStream: client.subjectStream
+        }) /*,
         new LanguageHandler(
             {
                 languageCallback: (language) => {

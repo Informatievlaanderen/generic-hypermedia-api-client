@@ -13,22 +13,22 @@ import {VersioningHandler} from "./VersioningHandler";
 try {
     const client = new ApiClient(null);
 
-    client.fetch('http://localhost:3001/api',
+    client.fetch('http://localhost:3001/api/pagination',
         [
-            new MyMetadataApiHandler(
+            /*new MyMetadataApiHandler(
                 {
                     metadataCallback: (metadata) => console.log(metadata),
                     apiClient: client,
                     followDocumentationLink: true,
                     subjectStream: client.subjectStream
                 }
-            )/*,
+            ),*/
             new PaginationHandler(
                 {
                     pagedataCallback: (pagedata) => console.log(pagedata),
                     subjectStream: client.subjectStream
                 }
-            ),
+            )/*,
             new LanguageHandler(
                 {
                     languageCallback: (language) => {

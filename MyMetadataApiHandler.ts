@@ -20,8 +20,7 @@ export class MyMetadataApiHandler implements IApiHandler {
 
     private subjectURLs: Array<string>; //All URLs that need to be checked against.
     private unidentifiedQuads: { [key: string]: [] } = {};    //Contains all quads whose URL (subject) has not been discovered (yet).
-    private identifiedQuads: { [key: string]: [] } = {};
-    private subjectMetadata: { [key: string]: {} } = {};    //Object that contains THE information that will be returned to the client
+    private identifiedQuads: { [key: string]: [] } = {};      //Contains quads whose subject is in subjectURLs and have a predicate that was matched
 
     private baseIRI: string;
 
@@ -78,8 +77,6 @@ export class MyMetadataApiHandler implements IApiHandler {
             if(priority >= 0){
                 this.identifiedQuads['apiDocumentation'].push({ value: link, priority: priority+1});
             }
-
-
         }
 
         this.baseIRI = response.url;
@@ -117,10 +114,7 @@ export class MyMetadataApiHandler implements IApiHandler {
                             this.identifiedQuads[object['predicate']] = [];
                         }
 
-                        this.identifiedQuads[object['predicate']].push({
-                            value: object['value'],
-                            priority: parseInt(index)+1
-                        });
+                        this.identifiedQuads[object['predicate']].push({ value: object['value'], priority: parseInt(index)+1});
                     }
                 }
             }
@@ -135,10 +129,7 @@ export class MyMetadataApiHandler implements IApiHandler {
                         this.unidentifiedQuads[RdfTerm.termToString(quad.subject)] = [];
                     }
 
-                    this.unidentifiedQuads[RdfTerm.termToString(quad.subject)].push({
-                        predicate: predicateVal,
-                        value: data[predicateVal]
-                    });
+                    this.unidentifiedQuads[RdfTerm.termToString(quad.subject)].push({ predicate: predicateVal, value: data[predicateVal]});
                 }
             })
         }

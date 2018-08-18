@@ -1,5 +1,7 @@
 import {IApiHandler} from "./IApiHandler";
+import * as RdfTerm from "rdf-string";
 const linkParser = require('parse-link-header');
+import {namedNode} from "@rdfjs/data-model";
 
 interface IPaginationHandlerArgs {
     pagedataCallback: () => any;
@@ -10,13 +12,13 @@ export class PaginationHandler implements IApiHandler {
     private pagedataCallback: any;
 
     private subjectURLs: Array<string>;
-    private myTriples: {[key: string]: {} } = {};
+    private unidentifiedQuads: {[key: string]: {} } = {};
     private subjectPageData: {[key: string]: {} } = {};
 
-    private readonly FIRST = 'http://www.w3.org/ns/hydra/core#first';
-    private readonly NEXT = 'http://www.w3.org/ns/hydra/core#next';
-    private readonly PREVIOUS = 'http://www.w3.org/ns/hydra/core#previous';
-    private readonly LAST = 'http://www.w3.org/ns/hydra/core#last';
+    private readonly FIRST = namedNode('http://www.w3.org/ns/hydra/core#first');
+    private readonly NEXT = namedNode('http://www.w3.org/ns/hydra/core#next');
+    private readonly PREVIOUS = namedNode('http://www.w3.org/ns/hydra/core#previous');
+    private readonly LAST = namedNode('http://www.w3.org/ns/hydra/core#last');
 
     private pagedataFields: Array<string> = ['first', 'next', 'last', 'prev'];
 
@@ -36,65 +38,60 @@ export class PaginationHandler implements IApiHandler {
     onFetch(response: Response) {
         if(response.headers.has('link')){
             let result = linkParser(response.headers.get('link'));
-            Object.keys(result).forEach( (key) => {
-                this.subjectPageData[key] = { objectValue: result[key]['url'], priority: 0 };
-            })
-        }
-        /*if(response.headers.get('link') !== null){
-            let links = response.headers.get('link').split(',');
-            for(let i = 0 ; i < links.length ; i++){
-                let pieces = links[i].split(';');
-                if(pieces[1].indexOf('prev') >= 0){
-                    this.subjectPageData['previous'] = {objectValue: pieces[0], priority: 0};
-                } else if(pieces[1].indexOf('first') >= 0){
-                    this.subjectPageData['first'] = {objectValue: pieces[0], priority: 0};
-                } else if(pieces[1].indexOf('last') >= 0){
-                    this.subjectPageData['last'] = {objectValue: pieces[0], priority: 0};
-                } else if(pieces[1].indexOf('next') >= 0){
-                    this.subjectPageData['next'] = {objectValue: pieces[0], priority: 0};
-                }
+            const priority = this.subjectURLs.indexOf(response.url);
+            if(priority >= 0){
+                Object.keys(result).forEach( (key) => {
+                    this.subjectPageData[key] = { objectValue: result[key]['url'], priority: priority };
+                });
             }
-        }*/
+        }
     }
 
     onQuad(quad: RDF.Quad) {
         let urlMatched = false;
-        for(let index in this.subjectURLs){
+        for (let index in this.subjectURLs) {
             const subjectURL = this.subjectURLs[index];
-
-            if(quad.subject.value === subjectURL){
+            if (RdfTerm.termToString(quad.subject) === subjectURL) {
                 urlMatched = true;
                 //Process the quad and add its info to the subjectPageData
-                this.checkPredicates(quad, (pagedata) => {
-                    Object.keys(pagedata).forEach( (key) => {
+                this.checkPredicates(quad, (data) => {
+                    if(Object.keys(data).length > 0){
+                        const key = Object.keys(data)[0];
                         const pageDataPart = this.subjectPageData[key];
-                        if(!pageDataPart || pageDataPart["priority"] > index){
-                            this.subjectPageData[key] = {objectValue: pagedata[key], priority: index}
+                        if(!pageDataPart || pageDataPart['priority'] > parseInt(index)+1){
+                            this.subjectPageData[key] = { value: data[key], priority: parseInt(index)+1}
                         }
-                    })
+                    }
                 })
             }
 
-            for(let subjectValue in this.myTriples){
+            for (let subjectValue in this.unidentifiedQuads) {
                 //If there's already data for the URL, move it to the subjectPageData
-                if(subjectValue === subjectURL){
-                    const data = this.myTriples[subjectValue];
-                    Object.keys(data).forEach( (key) => {
-                        this.subjectPageData[key] = {objectValue: data[key], priority: index};
+                if (subjectValue === subjectURL) {
+                    const data = this.unidentifiedQuads[subjectValue];
+                    Object.keys(data).forEach((key) => {
+                        if(!this.subjectPageData[key]){
+                            this.subjectPageData[key] = {};
+                        }
+
+                        if(this.subjectPageData[key]['priority'] > parseInt(index)+1){
+                            this.subjectPageData[key] = { value: data[key], priority: parseInt(index)+1};
+                        }
                     });
-                    delete this.myTriples[subjectValue];
+                    delete this.unidentifiedQuads[subjectValue];
+
                 }
             }
         }
 
         //The URL has not been discovered (yet)
-        if(!urlMatched){
+        if (!urlMatched) {
             this.checkPredicates(quad, (pagedata) => {
-                Object.keys(pagedata).forEach( (key) => {
-                    if(!this.myTriples[quad.subject.value]){
-                        this.myTriples[quad.subject.value] = {};
+                Object.keys(pagedata).forEach((key) => {
+                    if (!this.unidentifiedQuads[RdfTerm.termToString(quad.subject)]) {
+                        this.unidentifiedQuads[RdfTerm.termToString(quad.subject)] = {};
                     }
-                    this.myTriples[quad.subject.value][key] = pagedata[key];
+                    this.unidentifiedQuads[RdfTerm.termToString(quad.subject)][key] = pagedata[key];
                 })
             })
         }
@@ -102,18 +99,19 @@ export class PaginationHandler implements IApiHandler {
 
     checkPredicates(quad: RDF.Quad, dataCallback: () => any){
         let match = {};
-        if(quad.predicate.value === this.FIRST){
+
+        if(quad.predicate.equals(this.FIRST)){
             match["first"] = quad.object.value;
         }
-        if(quad.predicate.value === this.NEXT){
+        if(quad.predicate.equals( this.NEXT)){
             match["next"] = quad.object.value;
         }
 
-        if(quad.predicate.value === this.PREVIOUS){
+        if(quad.predicate.equals(this.PREVIOUS)){
             match["prev"] = quad.object.value;
         }
 
-        if(quad.predicate.value === this.LAST){
+        if(quad.predicate.equals(this.LAST)){
             match["last"] = quad.object.value;
         }
 
@@ -123,13 +121,14 @@ export class PaginationHandler implements IApiHandler {
     onEnd() {
         let pagedataObject = {};
         for(let index in this.pagedataFields){
-            if(this.subjectPageData[this.pagedataFields[index]] === undefined){
-                pagedataObject[this.pagedataFields[index]] = null;
+            let pagedataField = this.pagedataFields[index];
+
+            if(!this.subjectPageData[pagedataField]){
+                pagedataObject[pagedataField] = null;
             } else {
-                pagedataObject[this.pagedataFields[index]] = this.subjectPageData[this.pagedataFields[index]]['objectValue'];
+                pagedataObject[pagedataField] = this.subjectPageData[pagedataField]['value'];
             }
         }
-
         this.pagedataCallback(pagedataObject);
     }
 }
