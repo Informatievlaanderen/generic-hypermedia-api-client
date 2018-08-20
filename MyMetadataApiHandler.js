@@ -46,8 +46,7 @@ var MyMetadataApiHandler = /** @class */ (function () {
                 this.identifiedQuads['apiDocumentation'] = [];
             }
             var object = linkParser(response.headers.get('link'));
-            var rel = Object.keys(object)[0];
-            var link = object[rel].url;
+            var link = object[RdfTerm.termToString(MyMetadataApiHandler.API_DOCUMENTATION)].url;
             var priority = this.subjectURLs.indexOf(response.url);
             if (!this.identifiedQuads['apiDocumentation']) {
                 this.identifiedQuads['apiDocumentation'] = [];

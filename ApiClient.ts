@@ -79,7 +79,6 @@ export class ApiClient {
                 try {
                     const contentType = contentTypeParser.parse(response.headers.get('content-type')).type;
                     let parser = formats.parsers.find(contentType);
-
                     let stream = null;
                     if(parser){
                         stream = new parser.Impl(response.body, {baseIRI: response.url});

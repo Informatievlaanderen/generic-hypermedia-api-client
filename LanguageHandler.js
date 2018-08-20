@@ -38,7 +38,7 @@ var LanguageHandler = /** @class */ (function () {
         //Make sure that only literals in different language are filtered out.
         //IRIs (NamedNodes) and BlankNodes don't have a language, so we always push them in the stream.
         if (!this.streamIsStopped) {
-            if (quad.object.termType == 'Literal') {
+            if (quad.object.termType === 'Literal') {
                 if (quad.object.language.toLowerCase() == this.acceptedLanguage.toLowerCase()) {
                     this.quadStream.unshift(quad);
                 }
