@@ -81,4 +81,4 @@ const versioningHandler = new VersioningHandler({
 client.fetch('http://localhost:3001/api/versioning', [ versioningHandler ]);
 ```
 
-Het is ook mogelijk om meerdere bouwblokken samen te testen, maar het kan zijn dat niet voor elke bouwblok een resultaat gevonden wordt.
+Het is ook mogelijk om meerdere bouwblokken samen te testen. Je maakt hiervoor de handlers aan, zoals hierboven en geeft ze mee in de array. De URL die je hiervoor kan gebruiken is `http://localhost:3001/api/all`.
