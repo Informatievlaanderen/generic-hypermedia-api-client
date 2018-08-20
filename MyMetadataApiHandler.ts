@@ -28,21 +28,41 @@ export class MyMetadataApiHandler implements IApiHandler {
     private static readonly API_DOCUMENTATION = namedNode('http://www.w3.org/ns/hydra/core#apiDocumentation');
     private static readonly API_TITLE_1 = namedNode('http://purl.org/dc/terms/title');
     private static readonly API_TITLE_2 = namedNode('http://www.w3.org/ns/hydra/core#title');
+    private static readonly API_DESCRIPTION = namedNode( 'http://w3.org/ns/hydra/core#description');
+    private static readonly API_ISSUED = namedNode('http://purl.org/dc/terms/issued');
+    private static readonly API_MODIFIED = namedNode('http://purl.org/dc/terms/modified');
+    private static readonly API_LICENSE = namedNode('http://purl.org/dc/terms/license');
+
+    private static readonly API_CONTACT_POINT = namedNode('https://schema.org/contactPoint');
     private static readonly API_CONTACT_NAME = namedNode('https://schema.org/contactnaam');
     private static readonly API_CONTACT_EMAIL = namedNode('https://schema.org/email');
     private static readonly API_CONTACT_TELEPHONE = namedNode('http://schema.org/telephone');
-    private static readonly API_GEOMETRY = namedNode('http://www.w3.org/ns/locn#geometry');
-    private static readonly API_START_DATE = namedNode('http://schema.org/startDate');
-    private static readonly API_END_DATE = namedNode('http://schema.org/endDate')
 
     private static readonly API_TEMPORAL = namedNode('http://purl.org/dc/terms/temporal');
+    private static readonly API_START_DATE = namedNode('http://schema.org/startDate');
+    private static readonly API_END_DATE = namedNode('http://schema.org/endDate');
+
     private static readonly API_SPATIAL = namedNode('http://purl.org/dc/terms/spatial');
-    private static readonly API_CONTACT_POINT = namedNode('https://schema.org/contactPoint');
+    private static readonly API_GEOMETRY = namedNode('http://www.w3.org/ns/locn#geometry');
 
     private myQuads: Array<any> = [];
 
     private metadataFields: Array<string> =
-        ['apiDocumentation', 'apiTitle', 'apiContactName', 'apiContactEmail', 'apiContactTelephone', /*'temporal', 'spatial',*/ 'geometry', 'startDate', 'endDate'];
+        ['apiDocumentation',
+            'apiTitle',
+            'apiContactName',
+            'apiContactEmail',
+            'apiContactTelephone',
+            'temporal',
+            'spatial',
+            'geometry',
+            'temporalStartDate',
+            'temporalEndDate',
+            'apiLicense',
+            'apiDescription',
+            'apiIssued',
+            'apiModified'
+        ];
 
     constructor(args: IMetadataHandlerArgs) {
         this.metadataCallback = args.metadataCallback;
@@ -74,6 +94,11 @@ export class MyMetadataApiHandler implements IApiHandler {
             let link = object[rel].url;
 
             const priority = this.subjectURLs.indexOf(response.url);
+
+            if(!this.identifiedQuads['apiDocumentation']){
+                this.identifiedQuads['apiDocumentation'] = [];
+            }
+
             if(priority >= 0){
                 this.identifiedQuads['apiDocumentation'].push({ value: link, priority: priority+1});
             }
@@ -140,11 +165,26 @@ export class MyMetadataApiHandler implements IApiHandler {
 
         if (quad.predicate.equals(MyMetadataApiHandler.API_DOCUMENTATION)) {
             match['apiDocumentation'] = this.baseIRI + quad.object.value;
+        }
 
+        if(quad.predicate.equals(MyMetadataApiHandler.API_DESCRIPTION)){
+            match['apiDescription'] = quad.object.value; //RdfTerm.termToString(quad.object);
+        }
+
+        if(quad.predicate.equals(MyMetadataApiHandler.API_LICENSE)){
+            match['apiLicense'] = quad.object.value; //RdfTerm.termToString(quad.object);
+        }
+
+        if(quad.predicate.equals(MyMetadataApiHandler.API_ISSUED)){
+            match['apiIssued'] = quad.object.value; //RdfTerm.termToString(quad.object);
+        }
+
+        if(quad.predicate.equals(MyMetadataApiHandler.API_MODIFIED)){
+            match['apiModified'] = quad.object.value; //RdfTerm.termToString(quad.object);
         }
 
         if (quad.predicate.equals(MyMetadataApiHandler.API_TITLE_1) || quad.predicate.equals(MyMetadataApiHandler.API_TITLE_2)) {
-            match['apiTitle'] = RdfTerm.termToString(quad.object);
+            match['apiTitle'] = quad.object.value; //RdfTerm.termToString(quad.object);
         }
 
         if (quad.predicate.equals(MyMetadataApiHandler.API_CONTACT_POINT) || quad.predicate.equals(MyMetadataApiHandler.API_TEMPORAL) || quad.predicate.equals(MyMetadataApiHandler.API_SPATIAL)) {
@@ -155,30 +195,29 @@ export class MyMetadataApiHandler implements IApiHandler {
 
         //Belongs to schema:contactPoint
         if (quad.predicate.equals(MyMetadataApiHandler.API_CONTACT_NAME)) {
-            match['apiContactName'] = RdfTerm.termToString(quad.object);
+            match['apiContactName'] = quad.object.value; //RdfTerm.termToString(quad.object);
         }
 
         //Belongs to schema:contactPoint
         if (quad.predicate.equals(MyMetadataApiHandler.API_CONTACT_EMAIL)) {
-            match['apiContactEmail'] = RdfTerm.termToString(quad.object);
+            match['apiContactEmail'] = quad.object.value; //RdfTerm.termToString(quad.object);
         }
 
         //Belongs to schema:contactPoint?
         if (quad.predicate.equals(MyMetadataApiHandler.API_CONTACT_TELEPHONE)) {
-            match['apiContactTelephone'] = RdfTerm.termToString(quad.object);
+            match['apiContactTelephone'] = quad.object.value; //RdfTerm.termToString(quad.object);
         }
 
-        //TODO : fix this please
         if (quad.predicate.equals(MyMetadataApiHandler.API_GEOMETRY)) {
-            match['geometry'] = RdfTerm.termToString(quad.object);
+            match['geometry'] = quad.object.value; //RdfTerm.termToString(quad.object);
         }
-        //TODO : fix this please
+
         if (quad.predicate.equals(MyMetadataApiHandler.API_START_DATE)) {
-            match['startDate'] = RdfTerm.termToString(quad.object);
+            match['temporalStartDate'] = quad.object.value; //RdfTerm.termToString(quad.object);
         }
-        //TODO : fix this please
+
         if (quad.predicate.equals(MyMetadataApiHandler.API_END_DATE)) {
-            match['endDate'] = RdfTerm.termToString(quad.object);
+            match['temporalEndDate'] = quad.object.value; //RdfTerm.termToString(quad.object);
         }
 
         dataCallback(match);

@@ -9,7 +9,21 @@ var MyMetadataApiHandler = /** @class */ (function () {
         this.unidentifiedQuads = {}; //Contains all quads whose URL (subject) has not been discovered (yet).
         this.identifiedQuads = {}; //Contains quads whose subject is in subjectURLs and have a predicate that was matched
         this.myQuads = [];
-        this.metadataFields = ['apiDocumentation', 'apiTitle', 'apiContactName', 'apiContactEmail', 'apiContactTelephone', /*'temporal', 'spatial',*/ 'geometry', 'startDate', 'endDate'];
+        this.metadataFields = ['apiDocumentation',
+            'apiTitle',
+            'apiContactName',
+            'apiContactEmail',
+            'apiContactTelephone',
+            'temporal',
+            'spatial',
+            'geometry',
+            'temporalStartDate',
+            'temporalEndDate',
+            'apiLicense',
+            'apiDescription',
+            'apiIssued',
+            'apiModified'
+        ];
         this.metadataCallback = args.metadataCallback;
         this.apiClient = args.apiClient;
         this.followDocLink = args.followDocumentationLink;
@@ -35,6 +49,9 @@ var MyMetadataApiHandler = /** @class */ (function () {
             var rel = Object.keys(object)[0];
             var link = object[rel].url;
             var priority = this.subjectURLs.indexOf(response.url);
+            if (!this.identifiedQuads['apiDocumentation']) {
+                this.identifiedQuads['apiDocumentation'] = [];
+            }
             if (priority >= 0) {
                 this.identifiedQuads['apiDocumentation'].push({ value: link, priority: priority + 1 });
             }
@@ -94,8 +111,20 @@ var MyMetadataApiHandler = /** @class */ (function () {
         if (quad.predicate.equals(MyMetadataApiHandler.API_DOCUMENTATION)) {
             match['apiDocumentation'] = this.baseIRI + quad.object.value;
         }
+        if (quad.predicate.equals(MyMetadataApiHandler.API_DESCRIPTION)) {
+            match['apiDescription'] = quad.object.value; //RdfTerm.termToString(quad.object);
+        }
+        if (quad.predicate.equals(MyMetadataApiHandler.API_LICENSE)) {
+            match['apiLicense'] = quad.object.value; //RdfTerm.termToString(quad.object);
+        }
+        if (quad.predicate.equals(MyMetadataApiHandler.API_ISSUED)) {
+            match['apiIssued'] = quad.object.value; //RdfTerm.termToString(quad.object);
+        }
+        if (quad.predicate.equals(MyMetadataApiHandler.API_MODIFIED)) {
+            match['apiModified'] = quad.object.value; //RdfTerm.termToString(quad.object);
+        }
         if (quad.predicate.equals(MyMetadataApiHandler.API_TITLE_1) || quad.predicate.equals(MyMetadataApiHandler.API_TITLE_2)) {
-            match['apiTitle'] = RdfTerm.termToString(quad.object);
+            match['apiTitle'] = quad.object.value; //RdfTerm.termToString(quad.object);
         }
         if (quad.predicate.equals(MyMetadataApiHandler.API_CONTACT_POINT) || quad.predicate.equals(MyMetadataApiHandler.API_TEMPORAL) || quad.predicate.equals(MyMetadataApiHandler.API_SPATIAL)) {
             //Check if there are triples with this quad its object as subject
@@ -104,27 +133,24 @@ var MyMetadataApiHandler = /** @class */ (function () {
         }
         //Belongs to schema:contactPoint
         if (quad.predicate.equals(MyMetadataApiHandler.API_CONTACT_NAME)) {
-            match['apiContactName'] = RdfTerm.termToString(quad.object);
+            match['apiContactName'] = quad.object.value; //RdfTerm.termToString(quad.object);
         }
         //Belongs to schema:contactPoint
         if (quad.predicate.equals(MyMetadataApiHandler.API_CONTACT_EMAIL)) {
-            match['apiContactEmail'] = RdfTerm.termToString(quad.object);
+            match['apiContactEmail'] = quad.object.value; //RdfTerm.termToString(quad.object);
         }
         //Belongs to schema:contactPoint?
         if (quad.predicate.equals(MyMetadataApiHandler.API_CONTACT_TELEPHONE)) {
-            match['apiContactTelephone'] = RdfTerm.termToString(quad.object);
+            match['apiContactTelephone'] = quad.object.value; //RdfTerm.termToString(quad.object);
         }
-        //TODO : fix this please
         if (quad.predicate.equals(MyMetadataApiHandler.API_GEOMETRY)) {
-            match['geometry'] = RdfTerm.termToString(quad.object);
+            match['geometry'] = quad.object.value; //RdfTerm.termToString(quad.object);
         }
-        //TODO : fix this please
         if (quad.predicate.equals(MyMetadataApiHandler.API_START_DATE)) {
-            match['startDate'] = RdfTerm.termToString(quad.object);
+            match['temporalStartDate'] = quad.object.value; //RdfTerm.termToString(quad.object);
         }
-        //TODO : fix this please
         if (quad.predicate.equals(MyMetadataApiHandler.API_END_DATE)) {
-            match['endDate'] = RdfTerm.termToString(quad.object);
+            match['temporalEndDate'] = quad.object.value; //RdfTerm.termToString(quad.object);
         }
         dataCallback(match);
     };
@@ -190,15 +216,19 @@ var MyMetadataApiHandler = /** @class */ (function () {
     MyMetadataApiHandler.API_DOCUMENTATION = data_model_1.namedNode('http://www.w3.org/ns/hydra/core#apiDocumentation');
     MyMetadataApiHandler.API_TITLE_1 = data_model_1.namedNode('http://purl.org/dc/terms/title');
     MyMetadataApiHandler.API_TITLE_2 = data_model_1.namedNode('http://www.w3.org/ns/hydra/core#title');
+    MyMetadataApiHandler.API_DESCRIPTION = data_model_1.namedNode('http://w3.org/ns/hydra/core#description');
+    MyMetadataApiHandler.API_ISSUED = data_model_1.namedNode('http://purl.org/dc/terms/issued');
+    MyMetadataApiHandler.API_MODIFIED = data_model_1.namedNode('http://purl.org/dc/terms/modified');
+    MyMetadataApiHandler.API_LICENSE = data_model_1.namedNode('http://purl.org/dc/terms/license');
+    MyMetadataApiHandler.API_CONTACT_POINT = data_model_1.namedNode('https://schema.org/contactPoint');
     MyMetadataApiHandler.API_CONTACT_NAME = data_model_1.namedNode('https://schema.org/contactnaam');
     MyMetadataApiHandler.API_CONTACT_EMAIL = data_model_1.namedNode('https://schema.org/email');
     MyMetadataApiHandler.API_CONTACT_TELEPHONE = data_model_1.namedNode('http://schema.org/telephone');
-    MyMetadataApiHandler.API_GEOMETRY = data_model_1.namedNode('http://www.w3.org/ns/locn#geometry');
+    MyMetadataApiHandler.API_TEMPORAL = data_model_1.namedNode('http://purl.org/dc/terms/temporal');
     MyMetadataApiHandler.API_START_DATE = data_model_1.namedNode('http://schema.org/startDate');
     MyMetadataApiHandler.API_END_DATE = data_model_1.namedNode('http://schema.org/endDate');
-    MyMetadataApiHandler.API_TEMPORAL = data_model_1.namedNode('http://purl.org/dc/terms/temporal');
     MyMetadataApiHandler.API_SPATIAL = data_model_1.namedNode('http://purl.org/dc/terms/spatial');
-    MyMetadataApiHandler.API_CONTACT_POINT = data_model_1.namedNode('https://schema.org/contactPoint');
+    MyMetadataApiHandler.API_GEOMETRY = data_model_1.namedNode('http://www.w3.org/ns/locn#geometry');
     return MyMetadataApiHandler;
 }());
 exports.MyMetadataApiHandler = MyMetadataApiHandler;

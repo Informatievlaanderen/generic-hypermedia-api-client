@@ -1,5 +1,6 @@
 "use strict";
 exports.__esModule = true;
+var stream_1 = require("stream");
 require('es6-promise').polyfill();
 require('isomorphic-fetch');
 var RDF = require('rdf-ext');
@@ -43,9 +44,6 @@ var ApiClient = /** @class */ (function () {
                 if (object.datetime) {
                     headers.append('Accept-Datetime', object.datetime);
                 }
-                else {
-                    headers.append('Link', object.version);
-                }
             }
         });
         //Fetch URL given as parameter
@@ -64,9 +62,10 @@ var ApiClient = /** @class */ (function () {
                 try {
                     var contentType = contentTypeParser.parse(response.headers.get('content-type')).type;
                     var parser = formats.parsers.find(contentType);
+                    var stream_2 = null;
                     if (parser) {
-                        var stream_1 = new parser.Impl(response.body, { baseIRI: response.url });
-                        stream_1.on('data', function (quad) {
+                        stream_2 = new parser.Impl(response.body, { baseIRI: response.url });
+                        stream_2.on('data', function (quad) {
                             //If there's a void:subset, we need to add the new URL to the stream and also check its content
                             if (quad.predicate.value === 'http://rdfs.org/ns/void#subset') {
                                 _this.subjectStream.unshift({ url: quad.subject.value });
@@ -78,15 +77,23 @@ var ApiClient = /** @class */ (function () {
                                 }
                             }
                         });
-                        stream_1.on('end', function () {
+                        stream_2.on('end', function () {
                             for (var i = 0; i < handlers.length; i++) {
                                 console.log('Stream is done for [' + handlers[i].constructor.name + ']');
                                 handlers[i].onEnd();
                             }
                         });
-                        stream_1.on('error', function (error) {
-                            stream_1.emit('end');
+                        stream_2.on('error', function (error) {
+                            stream_2.emit('end');
                             console.error('ERROR (ApiClient): ' + error);
+                        });
+                    }
+                    else {
+                        console.log('Not able to find a parser for this content-type: ' + contentType);
+                        stream_2 = new stream_1.Readable();
+                        stream_2.unshift(response.body);
+                        stream_2.on('data', function (data) {
+                            console.log(data); //TODO: maybe change this?
                         });
                     }
                 }

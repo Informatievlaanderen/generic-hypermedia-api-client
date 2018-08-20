@@ -1,6 +1,7 @@
 import {IApiHandler} from "./IApiHandler";
 import {LanguageHandler} from "./LanguageHandler";
 import {VersioningHandler} from "./VersioningHandler";
+import {Readable} from "stream";
 
 require('es6-promise').polyfill();
 require('isomorphic-fetch');
@@ -56,8 +57,6 @@ export class ApiClient {
                 let object = handler as VersioningHandler;
                 if(object.datetime){
                     headers.append('Accept-Datetime', object.datetime);
-                } else {
-                    headers.append('Link', object.version)
                 }
             }
         });
@@ -81,8 +80,9 @@ export class ApiClient {
                     const contentType = contentTypeParser.parse(response.headers.get('content-type')).type;
                     let parser = formats.parsers.find(contentType);
 
+                    let stream = null;
                     if(parser){
-                        let stream = new parser.Impl(response.body, {baseIRI: response.url});
+                        stream = new parser.Impl(response.body, {baseIRI: response.url});
                         stream.on('data', (quad) => {
                             //If there's a void:subset, we need to add the new URL to the stream and also check its content
                             if (quad.predicate.value === 'http://rdfs.org/ns/void#subset') {
@@ -106,6 +106,13 @@ export class ApiClient {
                             stream.emit('end');
                             console.error('ERROR (ApiClient): ' + error);
                         });
+                    } else {
+                        console.log('Not able to find a parser for this content-type: ' + contentType);
+                        stream = new Readable();
+                        stream.unshift(response.body);
+                        stream.on('data', (data) => {
+                            console.log(data);  //TODO: maybe change this?
+                        })
                     }
 
                 } catch (e) {
