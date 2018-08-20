@@ -16,7 +16,7 @@ De eenvoudigste manier is om een ZIP te downloaden van het project. In het besta
 
 Het testen van de _MetadataHandler_ :
 
-`const client = new ApiClient(null);
+`const client = new ApiClient(null);\n
  const metadataHandler = new MyMetadataApiHandler(
                 {
                     metadataCallback: (metadata) => console.log(metadata),
