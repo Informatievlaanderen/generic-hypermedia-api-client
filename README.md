@@ -7,7 +7,7 @@ De bouwblokken die reeds geïmplementeerd zijn:
 * [Taal](https://github.com/ddvlanck/LinkedData/wiki/LanguageHandler)
 * [Versionering](https://github.com/ddvlanck/LinkedData/wiki/VersioningHandler)
 
-Om gebruik te kunnen maken is een [ApiClient](https://github.com/ddvlanck/LinkedData/wiki/ApiClient) nodig 
+Om gebruik te kunnen maken van deze bouwblokken is een [ApiClient](https://github.com/ddvlanck/LinkedData/wiki/ApiClient) nodig 
 
 ## Testen
 
