@@ -23,7 +23,7 @@ const metadataHandler = new MyMetadataApiHandler(
                 {
                     metadataCallback: (metadata) => console.log(metadata),
                     apiClient: client,
-                    followDocumentationLink: true, //If there's an api documentation link, it will be fetch. You can set it to false if you want!
+                    followDocumentationLink: true, //If there's an api documentation link, it will be fetched. You can set it to false if you want!
                     subjectStream: client.subjectStream
                 }
             );
