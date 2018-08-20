@@ -2,10 +2,10 @@
 
 De bouwblokken die reeds geïmplementeerd zijn:
 
-* (Metadata)[https://github.com/ddvlanck/LinkedData/wiki/MetadataHandler]
-* (Paginering)[https://github.com/ddvlanck/LinkedData/wiki/PaginationHandler]
-* (Taal)[https://github.com/ddvlanck/LinkedData/wiki/LanguageHandler]
-* (Versionering)[https://github.com/ddvlanck/LinkedData/wiki/VersioningHandler]
+* [Metadata](https://github.com/ddvlanck/LinkedData/wiki/MetadataHandler)
+* [Paginering](https://github.com/ddvlanck/LinkedData/wiki/PaginationHandler)
+* [Taal](https://github.com/ddvlanck/LinkedData/wiki/LanguageHandler)
+* [Versionering](https://github.com/ddvlanck/LinkedData/wiki/VersioningHandler)
 
 Om gebruik te kunnen maken is een (ApiClient)[https://github.com/ddvlanck/LinkedData/wiki/ApiClient] nodig 
 
