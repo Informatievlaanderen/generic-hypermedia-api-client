@@ -1,5 +1,6 @@
 import {IApiHandler} from "./IApiHandler";
 import {Readable} from "stream";
+import * as RdfTerm from "rdf-string";
 
 interface ILanguageArgs {
     languageCallback: () => any;
@@ -54,7 +55,7 @@ export class LanguageHandler implements IApiHandler {
         //Make sure that only literals in different language are filtered out.
         //IRIs (NamedNodes) and BlankNodes don't have a language, so we always push them in the stream.
         if(!this.streamIsStopped){
-            if(quad.object.termType == 'Literal'){
+            if(quad.object.termType === 'Literal'){
                 if(quad.object.language.toLowerCase() == this.acceptedLanguage.toLowerCase()){
                     this.quadStream.unshift(quad);
                 }

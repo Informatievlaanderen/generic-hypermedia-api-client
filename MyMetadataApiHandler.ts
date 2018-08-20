@@ -90,8 +90,7 @@ export class MyMetadataApiHandler implements IApiHandler {
             }
 
             let object = linkParser(response.headers.get('link'));
-            let rel = Object.keys(object)[0];
-            let link = object[rel].url;
+            let link = object[RdfTerm.termToString(MyMetadataApiHandler.API_DOCUMENTATION)].url;
 
             const priority = this.subjectURLs.indexOf(response.url);
 
