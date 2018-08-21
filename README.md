@@ -7,7 +7,7 @@ De bouwblokken die reeds geïmplementeerd zijn:
 * [Taal](https://github.com/ddvlanck/LinkedData/wiki/LanguageHandler)
 * [Versionering](https://github.com/ddvlanck/LinkedData/wiki/VersioningHandler)
 
-Om gebruik te kunnen maken is een [ApiClient](https://github.com/ddvlanck/LinkedData/wiki/ApiClient) nodig 
+Om gebruik te kunnen maken van deze bouwblokken is een [ApiClient](https://github.com/ddvlanck/LinkedData/wiki/ApiClient) nodig 
 
 ## Testen
 
@@ -23,7 +23,7 @@ const metadataHandler = new MyMetadataApiHandler(
                 {
                     metadataCallback: (metadata) => console.log(metadata),
                     apiClient: client,
-                    followDocumentationLink: true, //If there's an api documentation link, it will be fetch. You can set it to false if you want!
+                    followDocumentationLink: true, //If there's an api documentation link, it will be fetched. You can set it to false if you want!
                     subjectStream: client.subjectStream
                 }
             );
@@ -81,4 +81,4 @@ const versioningHandler = new VersioningHandler({
 client.fetch('http://localhost:3001/api/versioning', [ versioningHandler ]);
 ```
 
-Het is ook mogelijk om meerdere bouwblokken samen te testen, maar het kan zijn dat niet voor elke bouwblok een resultaat gevonden wordt.
+Het is ook mogelijk om meerdere bouwblokken samen te testen. Je maakt hiervoor de handlers aan, zoals hierboven en geeft ze mee in de array. De URL die je hiervoor kan gebruiken is `http://localhost:3001/api/all`.
