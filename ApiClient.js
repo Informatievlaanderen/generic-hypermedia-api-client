@@ -45,6 +45,11 @@ var ApiClient = /** @class */ (function () {
                     headers.append('Accept-Datetime', object.datetime);
                 }
             }
+            else if (handler.constructor.name === 'FullTextSearchHandler') {
+                if (handler.querystring) {
+                    url += handler.querystring;
+                }
+            }
         });
         //Fetch URL given as parameter
         this.fetcher(url, { headers: headers }).then(function (response) {

@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "typings": "index",
   "jest": {
     "transform": {
       "^.+\\.ts$": "ts-jest"
@@ -31,7 +32,13 @@
     "prepare": "npm run build"
   },
   "author": "Dwight Van Lancker",
-  "license": "ISC",
+  "license": "MIT",
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "*.d.ts",
+    "*.js"
+  ],
   "dependencies": {
     "@rdfjs/data-model": "^1.1.0",
     "accept-language-negotiator": "^1.0.1",

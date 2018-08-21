@@ -58,6 +58,10 @@ export class ApiClient {
                 if(object.datetime){
                     headers.append('Accept-Datetime', object.datetime);
                 }
+            } else if(handler.constructor.name === 'FullTextSearchHandler'){
+                if(handler.querystring){
+                    url += handler.querystring;
+                }
             }
         });
 
