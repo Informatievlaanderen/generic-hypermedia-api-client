@@ -88,4 +88,22 @@ const versioningHandler = new VersioningHandler({
 client.fetch('http://localhost:3001/api/versioning', [ versioningHandler ]);
 ```
 
-Het is ook mogelijk om meerdere bouwblokken samen te testen. Je maakt hiervoor de handlers aan, zoals hierboven en geeft ze mee in de array. De URL die je hiervoor kan gebruiken is `http://localhost:3001/api/all`.
+Het is ook mogelijk om meerdere bouwblokken samen te testen. Je maakt hiervoor de handlers aan, zoals hierboven en geeft ze mee in de array. De URL die je hiervoor kan gebruiken is `http://localhost:3001/api/all` :
+
+```typescript
+const client = new ApiClient(null);
+const metadataHandler = new MetadataApiHandler(
+                {
+                    metadataCallback: (metadata) => console.log(metadata),
+                    apiClient: client,
+                    followDocumentationLink: true, //If there's an api documentation link, it will be fetched. You can set it to false if you want!
+                }
+            );
+const pagineringHandler = new PaginationHandler(
+                {
+                    pagedataCallback: (pagedata) => console.log(pagedata),
+                    subjectStream: client.subjectStream
+                }
+            );
+client.fetch('http://localhost:3001/api/all', [ metadataHandler, pagineringHandler ]);
+```
