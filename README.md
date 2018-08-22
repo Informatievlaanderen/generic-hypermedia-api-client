@@ -66,7 +66,7 @@ const languageHandler = new LanguageHandler(
                             }
                         })
                     },
-                    acceptLanguageHeader: 'nl,en;q=0.8'  //Supported languages on the server are nl, en and fr
+                    acceptLanguageHeader: 'nl,en;q=0.8'  //The Accept-Language header string    (supported languages on the server are nl, fr and en)
                 }
             )
 client.fetch('http://localhost:3001/api/language', [ languageHandler ]);
