@@ -30,7 +30,7 @@ export class VersioningHandler implements IApiHandler {
     private versionFound: boolean;
     private graphID: string;
 
-    private stream: Readable;
+    public stream: Readable;
 
     constructor(args: IVersionHandlerArgs){
         this.versionCallback = args.versionCallback;
@@ -43,6 +43,10 @@ export class VersioningHandler implements IApiHandler {
         this.versionFound = false;
         this.stream = new Readable({ objectMode: true});
         this.stream._read = () => {};
+
+        this.stream.on('data', (data) => {
+            console.log(data);
+        })
 
         this.versionCallback({stream: this.stream});
     }

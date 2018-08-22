@@ -27,7 +27,7 @@ export class FullTextSearchHandler implements IApiHandler {
     private apiClient: ApiClient;
 
     private subjectURLs: Array<string> = [];
-    private quadStream: Readable;
+    public quadStream: Readable;
 
     private mappingQuads: Array<Object> = [];
     private searchQuads: Array<Object> = [];
@@ -35,7 +35,7 @@ export class FullTextSearchHandler implements IApiHandler {
     private templateURL: string;
     private templateKeys: Array<string> = [];
 
-    private parameterURLFetched: boolean;
+    public parameterURLFetched: boolean;
 
 
     constructor(args: IFullTextSearchHandlerArgs) {
@@ -45,6 +45,7 @@ export class FullTextSearchHandler implements IApiHandler {
         this.apiClient = args.apiClient;
 
         this.apiClient.subjectStream.on('data', (object) => {
+            object = JSON.parse(object.toString());
             let key = Object.keys(object)[0];
             this.subjectURLs.push(object[key]);
         })
@@ -53,6 +54,11 @@ export class FullTextSearchHandler implements IApiHandler {
 
         this.quadStream = new Readable({objectMode: true});
         this.quadStream._read = () => {};
+
+        this.quadStream.on('data', (data) => {
+            console.log(data);
+        })
+
 
         this.callback({stream: this.quadStream});
     }
@@ -139,7 +145,7 @@ export class FullTextSearchHandler implements IApiHandler {
                 }
             }
         } else {
-            this.quadStream.unshift(quad);
+            //this.quadStream.unshift(quad);
         }
     }
 
@@ -172,6 +178,7 @@ export class FullTextSearchHandler implements IApiHandler {
                 let parsedURL = template.parse(this.templateURL);
 
                 //The array of values has to have the same length of the array of templateKeys
+                //TODO : now client somehow needs to know how many keys there will be, maybe other way to implement it?
                 let object = {}
                 Object.keys(this.templateKeys).forEach( (index) => {
                     object[this.templateKeys[index]] = this.queryValues[index];
@@ -181,8 +188,8 @@ export class FullTextSearchHandler implements IApiHandler {
                 this.apiClient.fetch(queryURL, [this]);
                 this.parameterURLFetched = true;
             }
-        } else {
+        } /*else {
            this.quadStream.unshift(null);
-        }
+        }*/
     }
 }

@@ -9,7 +9,6 @@ const linkParser = require('parse-link-header');
 export interface IMetadataHandlerArgs {
     metadataCallback: (data) => void;
     apiClient: ApiClient;
-    subjectStream: NodeJS.ReadableStream;
     followDocumentationLink?: boolean;
 }
 
@@ -73,8 +72,8 @@ export class MetadataApiHandler implements IApiHandler {
         this.subjectURLs = [];
         //Listener for subjectstream from client.
         //Every time a new url is added to the stream, the fetch method from the client with this new url is executed.
-        args.subjectStream.on('data', (object) => {
-            object = JSON.parse(object);
+        this.apiClient.subjectStream.on('data', (object) => {
+            object = JSON.parse(object.toString());
             if(object['url']){
                 this.subjectURLs.push(object['url']);
             } else if(object['apiDoc']){

@@ -9,7 +9,6 @@ import {FullTextSearchHandler} from "./lib/FullTextSearchHandler";
 
 try {
     //TODO : add your code snippet here
-    
 } catch(e){
     console.log(e);
 }
