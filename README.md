@@ -1,4 +1,12 @@
-# Implementatie van de generiek bouwblokken
+# Generieke Hypermedia API Client
+
+Er wordt gebouwd aan een specificatie van generieke bouwblokken voor API's in Vlaanderen. Dit is deel van de onderzoeksgroep [Werkgroep datastandaarden van het Stuurorgaan](https://overheid.vlaanderen.be/stuurorgaan-werkgroepen).
+
+Een generieke Hypermedia API beschrijft in elke repons de verdere stappen die vanaf dat punt kunnen worden genomen met Hypermedia Controls. Een client kan vervolgens een generieke afhandeling voorzien voor elk van deze bouwblokken.
+
+Hier gebeurt de implementatie van deze bouwblokken voor de client. Meer info vind je [hier](https://github.com/Informatievlaanderen/generieke-hypermedia-api).
+
+# Implementatie van de generieke bouwblokken
 
 De bouwblokken die reeds geïmplementeerd zijn:
 
