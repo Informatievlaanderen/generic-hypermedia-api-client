@@ -2,9 +2,10 @@ import {IApiHandler} from "./IApiHandler";
 import * as RdfTerm from "rdf-string";
 const linkParser = require('parse-link-header');
 import {namedNode} from "@rdfjs/data-model";
+import * as RDF from "rdf";
 
 interface IPaginationHandlerArgs {
-    pagedataCallback: () => any;
+    pagedataCallback: (data) => void;
     subjectStream: NodeJS.ReadableStream;
 }
 
@@ -27,6 +28,7 @@ export class PaginationHandler implements IApiHandler {
 
         this.subjectURLs = [];
         args.subjectStream.on('data', (object) => {
+            object = JSON.parse(object);
             if(object['url']){
                 this.subjectURLs.push(object['url']);
             } else if(object['apiDoc']){
@@ -97,7 +99,7 @@ export class PaginationHandler implements IApiHandler {
         }
     }
 
-    checkPredicates(quad: RDF.Quad, dataCallback: () => any){
+    checkPredicates(quad: RDF.Quad, dataCallback: (data) => void){
         let match = {};
 
         if(quad.predicate.equals(this.FIRST)){

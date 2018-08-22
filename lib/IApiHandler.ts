@@ -1,3 +1,4 @@
+import * as RDF from "rdf";
 /**
  * Handles an API response.
  */
@@ -22,7 +23,7 @@ export interface IApiHandler {
      * @param {RDF.Quad} quad an RDF quad.
      * @param {any} dataCallback, called to return a match
     * */
-    checkPredicates(quad: RDF.Quad, dataCallback: () => any);
+    checkPredicates(quad: RDF.Quad, dataCallback: (data) => void);
 
 
 

@@ -1,5 +1,5 @@
-import {ApiClient} from "../ApiClient";
-import {MyMetadataApiHandler} from "../MyMetadataApiHandler";
+import {ApiClient} from "../lib/ApiClient";
+import {MetadataApiHandler} from "../lib/MetadataApiHandler";
 
 //FAIL: TypeScript compiler encountered syntax errors while transpiling. Errors: ',' expected.,'finally' expected.
 test('ApiClient constructor', () => {
@@ -29,16 +29,16 @@ describe('Generic Hypermedia API', () => {
         //MOCKUP FOR FETCH METHOD
     });
 
-    describe('The MyMetadataApiHandler module', () => {
+    describe('The MetadataApiHandler module', () => {
         let client: ApiClient;
 
         beforeEach(() => {
             client = new ApiClient({});
         });
 
-        it('should be a MyMetadataApiHandler constructor', () => {
-            expect(new (<any> MyMetadataApiHandler)({ metadataCallback: (metadata) => {}, apiClient: client, subjectStream: client.subjectStream, followDocumentationLink: true}))
-                .toBeInstanceOf(MyMetadataApiHandler);
+        it('should be a MetadataApiHandler constructor', () => {
+            expect(new (<any> MetadataApiHandler)({ metadataCallback: (metadata) => {}, apiClient: client, subjectStream: client.subjectStream, followDocumentationLink: true}))
+                .toBeInstanceOf(MetadataApiHandler);
         });
     })
 });

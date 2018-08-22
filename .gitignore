@@ -2,8 +2,8 @@ node_modules
 .idea
 lerna-debug.log
 yarn-error.log
-*.js
-*.d.ts
+lib/*.js
+lib/*.d.ts
 test/*.js
 test/*.js.map
 test/*.d.ts

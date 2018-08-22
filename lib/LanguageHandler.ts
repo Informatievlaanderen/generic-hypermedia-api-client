@@ -1,20 +1,20 @@
 import {IApiHandler} from "./IApiHandler";
 import {Readable} from "stream";
-import * as RdfTerm from "rdf-string";
+import * as RDF from "rdf";
 
 interface ILanguageArgs {
-    languageCallback: () => any;
+    languageCallback: (data) => void;
     acceptLanguageHeader: string
 }
 
 
 export class LanguageHandler implements IApiHandler {
 
-    private languageCallback: () => any;
-    private acceptLanguageHeader: string;
+    private languageCallback: (data) => void;
+    public acceptLanguageHeader: string;
 
     private acceptedLanguage: string;
-    private quadStream: NodeJS.ReadableStream;
+    private quadStream: Readable;
 
     private streamIsStopped: boolean;
 
@@ -66,7 +66,7 @@ export class LanguageHandler implements IApiHandler {
     }
 
     //Not needed
-    checkPredicates(quad: RDF.Quad, dataCallback: () => any) {}
+    checkPredicates(quad: RDF.Quad, dataCallback: (data) => void) {}
 
 
     onEnd() {

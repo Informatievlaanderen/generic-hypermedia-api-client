@@ -25,7 +25,7 @@ export class ApiClient {
 
     private fetcher: (input: RequestInfo, init?: RequestInit) => Promise<Response>;
     private parser: any;
-    public subjectStream: NodeJS.ReadableStream;
+    public subjectStream: Readable;
     private startURLAdded: boolean;
 
     constructor(args: IApiClientArgs) {
@@ -51,12 +51,12 @@ export class ApiClient {
         let headers = new Headers();
         handlers.filter(handler => {
             if (handler.constructor.name === 'LanguageHandler') {
-                let object = handler as LanguageHandler;
+                const object = handler as LanguageHandler;
                 headers.append('Accept-Language', object.acceptLanguageHeader);
             } else if(handler.constructor.name === 'VersioningHandler'){
-                let object = handler as VersioningHandler;
+                const object = handler as VersioningHandler;
                 if(object.datetime){
-                    headers.append('Accept-Datetime', object.datetime);
+                    headers.append('Accept-Datetime', object.datetime.toString());
                 }
             }
         });
@@ -67,7 +67,7 @@ export class ApiClient {
                 //The startURL also need to be in the stream
                 //This only has to be done 1 time, at the beginning
                 if (!this.startURLAdded) {
-                    this.subjectStream.unshift({url: response.url});
+                    this.subjectStream.unshift(JSON.stringify({url: response.url}));
                     this.startURLAdded = true;
                 }
 
@@ -86,7 +86,7 @@ export class ApiClient {
                         stream.on('data', (quad) => {
                             //If there's a void:subset, we need to add the new URL to the stream and also check its content
                             if (quad.predicate.value === 'http://rdfs.org/ns/void#subset') {
-                                this.subjectStream.unshift({url: quad.subject.value});
+                                this.subjectStream.unshift(JSON.stringify({url: quad.subject.value}));
                                 this.fetch(quad.subject.value, handlers);
                             } else {
                                 for (let i = 0; i < handlers.length; i++) {

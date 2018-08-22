@@ -19,7 +19,7 @@ Het testen van de _MetadataHandler_ :
 
 ```typescript
 const client = new ApiClient(null);
-const metadataHandler = new MyMetadataApiHandler(
+const metadataHandler = new MetadataApiHandler(
                 {
                     metadataCallback: (metadata) => console.log(metadata),
                     apiClient: client,

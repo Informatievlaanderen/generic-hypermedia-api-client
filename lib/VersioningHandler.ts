@@ -2,12 +2,13 @@ import {IApiHandler} from "./IApiHandler";
 import {Readable} from "stream";
 import {namedNode} from "@rdfjs/data-model";
 import * as RdfTerm from "rdf-string";
+import * as RDF from "rdf";
 import {ApiClient} from "./ApiClient";
 
 const parseLink = require('parse-link-header');
 
 interface IVersionHandlerArgs {
-    versionCallback: () => any;
+    versionCallback: (data) => void;
     apiClient: ApiClient;
     datetime: Date;
     followLink: boolean;
@@ -18,18 +19,18 @@ export class VersioningHandler implements IApiHandler {
     private readonly DATETIME = namedNode('http://www.w3.org/ns/prov#generatedAtTime');
     private readonly VERSION = namedNode('http://semweb.datasciencelab.be/ns/version/#relatedVersion');
 
-    private versionCallback: () => any;
+    private versionCallback: (data) => void;
     private apiClient: ApiClient;
-    private datetime: Date;
+    public datetime: Date;
     private followLink: boolean;
 
     private versionURL: string;
 
-    private myQuads: {[key: string]: [] } = {};   //Key will be graph ID
+    private myQuads: {[key: string]: Array<object> } = {};   //Key will be graph ID
     private versionFound: boolean;
     private graphID: string;
 
-    private stream: NodeJS.ReadableStream;
+    private stream: Readable;
 
     constructor(args: IVersionHandlerArgs){
         this.versionCallback = args.versionCallback;
@@ -92,7 +93,7 @@ export class VersioningHandler implements IApiHandler {
             if(this.myQuads[this.graphID].length > 0){
                 for(let index in this.myQuads[this.graphID]){
                     const triple = this.myQuads[this.graphID][index];
-                    this.stream.unshift(triple);
+                    this.stream.unshift(JSON.stringify(triple));
                 }
                 delete this.myQuads[this.graphID];
             }
@@ -105,7 +106,7 @@ export class VersioningHandler implements IApiHandler {
         }
     }
 
-    checkPredicates(quad: RDF.Quad, dataCallback: () => any) {
+    checkPredicates(quad: RDF.Quad, dataCallback: (data) => void){
         let triple = {};
 
         if(!this.versionFound){

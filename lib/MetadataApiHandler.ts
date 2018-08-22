@@ -1,26 +1,27 @@
 import {IApiHandler} from "./IApiHandler";
 import {ApiClient} from "./ApiClient";
 import * as RdfTerm from "rdf-string";
+import * as RDF from "rdf";
 import {namedNode} from "@rdfjs/data-model";
 
 const linkParser = require('parse-link-header');
 
 export interface IMetadataHandlerArgs {
-    metadataCallback: () => any;
+    metadataCallback: (data) => void;
     apiClient: ApiClient;
     subjectStream: NodeJS.ReadableStream;
     followDocumentationLink?: boolean;
 }
 
-export class MyMetadataApiHandler implements IApiHandler {
+export class MetadataApiHandler implements IApiHandler {
 
-    private metadataCallback: any;
+    private metadataCallback: (data) => void;
     private apiClient: ApiClient;
     private followDocLink: boolean;    //Boolean that indicates if a found documentation link has to be fetched
 
     private subjectURLs: Array<string>; //All URLs that need to be checked against.
-    private unidentifiedQuads: { [key: string]: [] } = {};    //Contains all quads whose URL (subject) has not been discovered (yet).
-    private identifiedQuads: { [key: string]: [] } = {};      //Contains quads whose subject is in subjectURLs and have a predicate that was matched
+    private unidentifiedQuads: { [key: string]: Array<object> } = {};    //Contains all quads whose URL (subject) has not been discovered (yet).
+    private identifiedQuads: { [key: string]: Array<object> } = {};      //Contains quads whose subject is in subjectURLs and have a predicate that was matched
 
     private baseIRI: string;
 
@@ -73,6 +74,7 @@ export class MyMetadataApiHandler implements IApiHandler {
         //Listener for subjectstream from client.
         //Every time a new url is added to the stream, the fetch method from the client with this new url is executed.
         args.subjectStream.on('data', (object) => {
+            object = JSON.parse(object);
             if(object['url']){
                 this.subjectURLs.push(object['url']);
             } else if(object['apiDoc']){
@@ -90,7 +92,7 @@ export class MyMetadataApiHandler implements IApiHandler {
             }
 
             let object = linkParser(response.headers.get('link'));
-            let link = object[RdfTerm.termToString(MyMetadataApiHandler.API_DOCUMENTATION)].url;
+            let link = object[RdfTerm.termToString(MetadataApiHandler.API_DOCUMENTATION)].url;
 
             const priority = this.subjectURLs.indexOf(response.url);
 
@@ -159,63 +161,63 @@ export class MyMetadataApiHandler implements IApiHandler {
         }
     }
 
-    checkPredicates(quad: RDF.Quad, dataCallback: () => any) {
+    checkPredicates(quad: RDF.Quad, dataCallback: (data) => void) {
         let match = {};
 
-        if (quad.predicate.equals(MyMetadataApiHandler.API_DOCUMENTATION)) {
+        if (quad.predicate.equals(MetadataApiHandler.API_DOCUMENTATION)) {
             match['apiDocumentation'] = this.baseIRI + quad.object.value;
         }
 
-        if(quad.predicate.equals(MyMetadataApiHandler.API_DESCRIPTION)){
+        if(quad.predicate.equals(MetadataApiHandler.API_DESCRIPTION)){
             match['apiDescription'] = quad.object.value; //RdfTerm.termToString(quad.object);
         }
 
-        if(quad.predicate.equals(MyMetadataApiHandler.API_LICENSE)){
+        if(quad.predicate.equals(MetadataApiHandler.API_LICENSE)){
             match['apiLicense'] = quad.object.value; //RdfTerm.termToString(quad.object);
         }
 
-        if(quad.predicate.equals(MyMetadataApiHandler.API_ISSUED)){
+        if(quad.predicate.equals(MetadataApiHandler.API_ISSUED)){
             match['apiIssued'] = quad.object.value; //RdfTerm.termToString(quad.object);
         }
 
-        if(quad.predicate.equals(MyMetadataApiHandler.API_MODIFIED)){
+        if(quad.predicate.equals(MetadataApiHandler.API_MODIFIED)){
             match['apiModified'] = quad.object.value; //RdfTerm.termToString(quad.object);
         }
 
-        if (quad.predicate.equals(MyMetadataApiHandler.API_TITLE_1) || quad.predicate.equals(MyMetadataApiHandler.API_TITLE_2)) {
+        if (quad.predicate.equals(MetadataApiHandler.API_TITLE_1) || quad.predicate.equals(MetadataApiHandler.API_TITLE_2)) {
             match['apiTitle'] = quad.object.value; //RdfTerm.termToString(quad.object);
         }
 
-        if (quad.predicate.equals(MyMetadataApiHandler.API_CONTACT_POINT) || quad.predicate.equals(MyMetadataApiHandler.API_TEMPORAL) || quad.predicate.equals(MyMetadataApiHandler.API_SPATIAL)) {
+        if (quad.predicate.equals(MetadataApiHandler.API_CONTACT_POINT) || quad.predicate.equals(MetadataApiHandler.API_TEMPORAL) || quad.predicate.equals(MetadataApiHandler.API_SPATIAL)) {
             //Check if there are triples with this quad its object as subject
             //If so, store them with the subject URL of this triple (schema:contactPoint)
             this.myQuads.push(quad);
         }
 
         //Belongs to schema:contactPoint
-        if (quad.predicate.equals(MyMetadataApiHandler.API_CONTACT_NAME)) {
+        if (quad.predicate.equals(MetadataApiHandler.API_CONTACT_NAME)) {
             match['apiContactName'] = quad.object.value; //RdfTerm.termToString(quad.object);
         }
 
         //Belongs to schema:contactPoint
-        if (quad.predicate.equals(MyMetadataApiHandler.API_CONTACT_EMAIL)) {
+        if (quad.predicate.equals(MetadataApiHandler.API_CONTACT_EMAIL)) {
             match['apiContactEmail'] = quad.object.value; //RdfTerm.termToString(quad.object);
         }
 
         //Belongs to schema:contactPoint?
-        if (quad.predicate.equals(MyMetadataApiHandler.API_CONTACT_TELEPHONE)) {
+        if (quad.predicate.equals(MetadataApiHandler.API_CONTACT_TELEPHONE)) {
             match['apiContactTelephone'] = quad.object.value; //RdfTerm.termToString(quad.object);
         }
 
-        if (quad.predicate.equals(MyMetadataApiHandler.API_GEOMETRY)) {
+        if (quad.predicate.equals(MetadataApiHandler.API_GEOMETRY)) {
             match['geometry'] = quad.object.value; //RdfTerm.termToString(quad.object);
         }
 
-        if (quad.predicate.equals(MyMetadataApiHandler.API_START_DATE)) {
+        if (quad.predicate.equals(MetadataApiHandler.API_START_DATE)) {
             match['temporalStartDate'] = quad.object.value; //RdfTerm.termToString(quad.object);
         }
 
-        if (quad.predicate.equals(MyMetadataApiHandler.API_END_DATE)) {
+        if (quad.predicate.equals(MetadataApiHandler.API_END_DATE)) {
             match['temporalEndDate'] = quad.object.value; //RdfTerm.termToString(quad.object);
         }
 
@@ -272,7 +274,7 @@ export class MyMetadataApiHandler implements IApiHandler {
         if (metadataObject['apiDocumentation']) {
             if (this.followDocLink) {
                 this.apiClient.fetch(metadataObject['apiDocumentation'], [this]);
-                this.apiClient.subjectStream.unshift({apiDoc: metadataObject['apiDocumentation']});
+                this.apiClient.subjectStream.unshift(JSON.stringify({apiDoc: metadataObject['apiDocumentation']}));
                 this.followDocLink = false;
             } else {
                 if (Object.keys(metadataObject).length > 0) {

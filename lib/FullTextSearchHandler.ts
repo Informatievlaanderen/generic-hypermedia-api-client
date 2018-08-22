@@ -2,12 +2,13 @@ import {IApiHandler} from "./IApiHandler";
 import {Readable} from "stream";
 import {namedNode} from "@rdfjs/data-model";
 import * as RdfTerm from "rdf-string";
+import * as RDF from "rdf";
 import {ApiClient} from "./ApiClient";
 
 const template = require('url-template');
 
 interface IFullTextSearchHandlerArgs {
-    callback: () => any;
+    callback: (data) => void;
     apiClient: ApiClient;
     queryValues: Array<string>,
     queryKeys?: Array<string>;
@@ -20,13 +21,13 @@ export class FullTextSearchHandler implements IApiHandler {
     private static readonly HYDRA_VARIABLE = namedNode('http://www.w3.org/ns/hydra/core#variable');
     private static readonly HYDRA_SEARCH = namedNode('http://www.w3.org/ns/hydra/core#search');
 
-    private callback: () => any;
+    private callback: (data) => void;
     public queryValues: Array<string> = [];
     public queryKeys: Array<string> = [];
     private apiClient: ApiClient;
 
     private subjectURLs: Array<string> = [];
-    private quadStream: NodeJS.ReadableStream;
+    private quadStream: Readable;
 
     private mappingQuads: Array<Object> = [];
     private searchQuads: Array<Object> = [];
@@ -109,7 +110,7 @@ export class FullTextSearchHandler implements IApiHandler {
             }
 
             for(let i in this.searchQuads){
-                const searchQuad = this.searchQuads[i];
+                const searchQuad = this.searchQuads[i] as RDF.Quad;
                 //Check level 1
                 if(this.subjectURLs.indexOf(RdfTerm.termToString(searchQuad.subject)) >= 0 && this.unidentifiedQuads[RdfTerm.termToString(searchQuad.object)]){
                     const values = this.unidentifiedQuads[RdfTerm.termToString(searchQuad.object)];
@@ -124,7 +125,7 @@ export class FullTextSearchHandler implements IApiHandler {
 
                 //Check level 2
                 for(let j in this.mappingQuads){
-                    const mapQuad = this.mappingQuads[j];
+                    const mapQuad = this.mappingQuads[j] as RDF.Quad;
                     if (mapQuad.subject.equals(searchQuad.object) && this.subjectURLs.indexOf(RdfTerm.termToString(searchQuad.subject)) >= 0 && this.unidentifiedQuads[RdfTerm.termToString(mapQuad.object)]) {
                         const values = this.unidentifiedQuads[RdfTerm.termToString(mapQuad.object)];
                         if (!this.templateURL && values['templateURL']) {
@@ -143,7 +144,7 @@ export class FullTextSearchHandler implements IApiHandler {
     }
 
 
-    checkPredicates(quad: RDF.Quad, dataCallback: () => any) {
+    checkPredicates(quad: RDF.Quad, dataCallback: (data) => void) {
         let template = {};
 
         if (quad.predicate.equals(FullTextSearchHandler.HYDRA_QUERY_TEMPLATE)) {
