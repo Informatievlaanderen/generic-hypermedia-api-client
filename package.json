@@ -36,12 +36,11 @@
   "files": [
     "index.js",
     "index.d.ts",
-    "*.d.ts",
-    "*.js"
+    "lib/*.d.ts",
+    "lib/*.js"
   ],
   "dependencies": {
     "@rdfjs/data-model": "^1.1.0",
-    "accept-language-negotiator": "^1.0.1",
     "content-type": "^1.0.4",
     "es6-promise": "^4.2.4",
     "isomorphic-fetch": "^2.2.1",
@@ -49,8 +48,6 @@
     "rdf": "^4.0.1",
     "rdf-ext": "^1.1.0",
     "rdf-formats-common": "^1.4.0",
-    "rdf-js": "^1.0.1",
-    "rdf-parser-jsonld": "^1.1.0",
     "rdf-string": "^1.2.0",
     "stream": "0.0.2",
     "url-template": "^2.0.8"

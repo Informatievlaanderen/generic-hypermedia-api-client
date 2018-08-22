@@ -3,7 +3,6 @@ import {ApiClient} from "./lib/ApiClient";
 import {MetadataApiHandler} from "./lib/MetadataApiHandler";
 import {PaginationHandler} from "./lib/PaginationHandler";
 import {VersioningHandler} from "./lib/VersioningHandler";
-import {type} from "os";
 import {FullTextSearchHandler} from "./lib/FullTextSearchHandler";
 
 

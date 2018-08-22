@@ -3,10 +3,11 @@ import * as RdfTerm from "rdf-string";
 const linkParser = require('parse-link-header');
 import {namedNode} from "@rdfjs/data-model";
 import * as RDF from "rdf";
+import {Readable} from "stream";
 
 interface IPaginationHandlerArgs {
     pagedataCallback: (data) => void;
-    subjectStream: NodeJS.ReadableStream;
+    subjectStream: Readable;
 }
 
 export class PaginationHandler implements IApiHandler {
