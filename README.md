@@ -75,7 +75,7 @@ client.fetch('http://localhost:3001/api/language', [ languageHandler ]);
 Hieronder bevindt zich een code snippet voor het testen van de _VersioningHandler_. Het resultaat is voorlopig enkel een link die wordt teruggestuurd van de server. Voor meer info, klik [hier](https://github.com/ddvlanck/LinkedData/wiki/VersioningHandler).
 
 ```typescript
-const client new ApiClient(null);
+const client = new ApiClient(null);
 const versioningHandler = new VersioningHandler({
                 versionCallback: version => {
                     version.stream.on('data' , (data) => {
