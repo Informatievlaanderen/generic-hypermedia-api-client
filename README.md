@@ -1,4 +1,12 @@
-# Implementatie van de generiek bouwblokken
+# Generieke Hypermedia API Client
+
+Er wordt gebouwd aan een specificatie van generieke bouwblokken voor API's in Vlaanderen. Dit is deel van de onderzoeksgroep [Werkgroep datastandaarden van het Stuurorgaan](https://overheid.vlaanderen.be/stuurorgaan-werkgroepen).
+
+Een generieke Hypermedia API beschrijft in elke repons de verdere stappen die vanaf dat punt kunnen worden genomen met Hypermedia Controls. Een client kan vervolgens een generieke afhandeling voorzien voor elk van deze bouwblokken.
+
+Hier gebeurt de implementatie van deze bouwblokken voor de client. Meer info vind je [hier](https://github.com/Informatievlaanderen/generieke-hypermedia-api).
+
+# Implementatie van de generieke bouwblokken
 
 De bouwblokken die reeds geïmplementeerd zijn:
 
@@ -24,7 +32,6 @@ const metadataHandler = new MetadataApiHandler(
                     metadataCallback: (metadata) => console.log(metadata),
                     apiClient: client,
                     followDocumentationLink: true, //If there's an api documentation link, it will be fetched. You can set it to false if you want!
-                    subjectStream: client.subjectStream
                 }
             );
 client.fetch('http://localhost:3001/api', [ metadataHandler ]);
@@ -58,7 +65,7 @@ const languageHandler = new LanguageHandler(
                             }
                         })
                     },
-                    acceptLanguageHeader: 'nl,en;q=0.8'  //Supported languages on the server are nl, en and fr
+                    acceptLanguageHeader: 'nl,en;q=0.8'  //The Accept-Language header string    (supported languages on the server are nl, fr and en)
                 }
             )
 client.fetch('http://localhost:3001/api/language', [ languageHandler ]);
@@ -67,7 +74,7 @@ client.fetch('http://localhost:3001/api/language', [ languageHandler ]);
 Hieronder bevindt zich een code snippet voor het testen van de _VersioningHandler_. Het resultaat is voorlopig enkel een link die wordt teruggestuurd van de server. Voor meer info, klik [hier](https://github.com/ddvlanck/LinkedData/wiki/VersioningHandler).
 
 ```typescript
-const client new ApiClient(null);
+const client = new ApiClient(null);
 const versioningHandler = new VersioningHandler({
                 versionCallback: version => {
                     version.stream.on('data' , (data) => {
