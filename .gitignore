@@ -4,11 +4,11 @@ lerna-debug.log
 yarn-error.log
 *.js
 *.d.ts
-**/test/**/*.js
-**/test/**/*.js.map
-**/test/**/*.d.ts
-**/index.js
-**/index.js.map
-**/index.d.ts
+test/*.js
+test/*.js.map
+test/*.d.ts
+index.js
+index.js.map
+index.d.ts
 coverage
 documentation
