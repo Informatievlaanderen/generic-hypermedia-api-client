@@ -1,117 +1,97 @@
-import {IApiHandler} from "./IApiHandler";
-import {LanguageHandler} from "./LanguageHandler";
-import {VersioningHandler} from "./VersioningHandler";
-import {Readable} from "stream";
-import {FullTextSearchHandler} from "./FullTextSearchHandler";
-
+"use strict";
+exports.__esModule = true;
 require('es6-promise').polyfill();
 require('isomorphic-fetch');
-const RDF = require('rdf-ext');
-const formats = require('rdf-formats-common')(RDF);
-const stream = require('stream');
+var RDF = require('rdf-ext');
+var formats = require('rdf-formats-common')(RDF);
+var stream = require('stream');
 var contentTypeParser = require('content-type');
-
-
-interface IApiClientArgs {
-    fetch?: (input?: Request | string, init?: RequestInit) => Promise<Response>;
-    rdfParser?: any; //SomeParserType (more specific);
-}
-
 /**
  * An API Client is used to discover capabilities of a certain API.
  * It has an internal fetch method and RDF parser.
  */
-export class ApiClient {
-
-    private fetcher: (input: RequestInfo, init?: RequestInit) => Promise<Response>;
-    private parser: any;
-    public subjectStream: NodeJS.ReadableStream;
-    private startURLAdded: boolean;
-
-    constructor(args: IApiClientArgs) {
+var ApiClient = /** @class */ (function () {
+    function ApiClient(args) {
         if (args != null) {
             this.fetcher = args.fetch != null ? args.fetch : fetch;
             this.parser = args.rdfParser != null ? args.rdfParser : null;
-        } else {
+        }
+        else {
             this.fetcher = fetch;
             this.parser = null;
         }
-        this.subjectStream = new stream.Readable({ objectMode: true});
-        this.subjectStream._read = () => {};
-
+        this.subjectStream = new stream.Readable({ objectMode: true });
+        this.subjectStream._read = function () { };
         this.startURLAdded = false;
     }
-
     /**
      * Fetch the given URL and invoke the given handlers on the response.
      * @param {string} url The URL to fetch.
      * @param {IApiHandler[]} handlers An array of handlers to invoke on the response.
      */
-    fetch(url: string, handlers: IApiHandler[]): void {
-        let headers = new Headers();
-        handlers.filter(handler => {
+    ApiClient.prototype.fetch = function (url, handlers) {
+        var _this = this;
+        var headers = new Headers();
+        handlers.filter(function (handler) {
             if (handler.constructor.name === 'LanguageHandler') {
-                let object = handler as LanguageHandler;
+                var object = handler;
                 headers.append('Accept-Language', object.acceptLanguageHeader);
-            } else if(handler.constructor.name === 'VersioningHandler'){
-                let object = handler as VersioningHandler;
-                if(object.datetime){
+            }
+            else if (handler.constructor.name === 'VersioningHandler') {
+                var object = handler;
+                if (object.datetime) {
                     headers.append('Accept-Datetime', object.datetime);
                 }
             }
         });
-
         //Fetch URL given as parameter
-        this.fetcher(url, {headers: headers}).then(response => {
+        this.fetcher(url, { headers: headers }).then(function (response) {
             try {
                 //The startURL also need to be in the stream
                 //This only has to be done 1 time, at the beginning
-                if (!this.startURLAdded) {
-                    this.subjectStream.unshift({url: response.url});
-                    this.startURLAdded = true;
+                if (!_this.startURLAdded) {
+                    _this.subjectStream.unshift({ url: response.url });
+                    _this.startURLAdded = true;
                 }
-
                 //Each handler has to execute his onFetch() method
-                for (let i = 0; i < handlers.length; i++) {
+                for (var i = 0; i < handlers.length; i++) {
                     handlers[i].onFetch(response);
                 }
-
                 try {
-                    const contentType = contentTypeParser.parse(response.headers.get('content-type')).type;
-                    let parser = formats.parsers.find(contentType);
-
-                    let stream = null;
-                    if(parser){
-                        stream = new parser.Impl(response.body, {baseIRI: response.url});
-                        stream.on('data', (quad) => {
+                    var contentType = contentTypeParser.parse(response.headers.get('content-type')).type;
+                    var parser = formats.parsers.find(contentType);
+                    var stream_1 = null;
+                    if (parser) {
+                        stream_1 = new parser.Impl(response.body, { baseIRI: response.url });
+                        stream_1.on('data', function (quad) {
                             //If there's a void:subset, we need to add the new URL to the stream and also check its content
                             if (quad.predicate.value === 'http://rdfs.org/ns/void#subset') {
-                                this.subjectStream.unshift({url: quad.subject.value});
-                                this.fetch(quad.subject.value, handlers);
-                            } else {
-                                for (let i = 0; i < handlers.length; i++) {
+                                _this.subjectStream.unshift({ url: quad.subject.value });
+                                _this.fetch(quad.subject.value, handlers);
+                            }
+                            else {
+                                for (var i = 0; i < handlers.length; i++) {
                                     handlers[i].onQuad(quad);
                                 }
                             }
                         });
-
-                        stream.on('end', () => {
-                            for (let i = 0; i < handlers.length; i++) {
+                        stream_1.on('end', function () {
+                            for (var i = 0; i < handlers.length; i++) {
                                 console.log('Stream is done for [' + handlers[i].constructor.name + ']');
                                 handlers[i].onEnd();
                             }
                         });
-
-                        stream.on('error', (error) => {
-                            stream.emit('end');
+                        stream_1.on('error', function (error) {
+                            stream_1.emit('end');
                             console.error('ERROR (ApiClient): ' + error);
                         });
-                    } else {
+                    }
+                    else {
                         //FullTextSearchHandler
                         //If the content-type is JSON , use FILTER parameter and queryValue in constructor to fetch new URL
                         //If content-type is no RDF or JSON, check if instance has queryKey and queryValue and fetch URL with this parameters
-                        handlers.filter( (handler) => {
-                            if(handler.constructor.name === 'FullTextSearchHandler'){
+                        handlers.filter(function (handler) {
+                            if (handler.constructor.name === 'FullTextSearchHandler') {
                                 //HAS NOT BEEN TESTED
                                 /*let object = handler as FullTextSearchHandler;
                                 let querystring = '';
@@ -142,20 +122,23 @@ export class ApiClient {
                                 }
 
                                 querystring = '?' + querystring;*/
-                            } else if(handler.constructor.name === 'VersioningHandler'){
-                                //If the body is HTML or some type that can't be parsed, we have to stream the body to the client
-                                stream.unshift(response.body);
                             }
-                        })
+                            else if (handler.constructor.name === 'VersioningHandler') {
+                                //If the body is HTML or some type that can't be parsed, we have to stream the body to the client
+                                stream_1.unshift(response.body);
+                            }
+                        });
                     }
-
-                } catch (e) {
+                }
+                catch (e) {
                     console.error('Error: ' + e.message);
                 }
-            } catch (e) {
+            }
+            catch (e) {
                 console.error('Error: ' + e.message);
             }
-        })
-    }
-}
-
+        });
+    };
+    return ApiClient;
+}());
+exports.ApiClient = ApiClient;
