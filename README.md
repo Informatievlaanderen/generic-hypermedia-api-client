@@ -21,7 +21,7 @@ Om gebruik te kunnen maken van deze bouwblokken is een [ApiClient](https://githu
 
 De eenvoudigste manier is om een ZIP te downloaden van het project. In het bestand **index.ts** kunnen de verschillende bouwblokken getest worden. Om een bouwblok te kunnen testen is altijd een _ApiClient_ nodig. De _fetch-methode_ van deze client verwacht een URL en een array van handlers.
 
-De eerste keer moet het commando **npm run build** uitgevoerd worden. Daarna kan je testen door het commando **node index.js** uit te voeren.
+De eerste keer moet het commando **npm run build** uitgevoerd worden. Daarna kan getest worden door het commando **node index.js** uit te voeren.
 
 ## Voorbeelden
 
