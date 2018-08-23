@@ -36,7 +36,7 @@ const metadataHandler = new MetadataApiHandler(
                     followDocumentationLink: true, //If there's an api documentation link, it will be fetched. You can set it to false if you want!
                 }
             );
-client.fetch('http://localhost:3001/api', [ metadataHandler ]);
+client.fetch('http://tw06v036.ugent.be/api', [ metadataHandler ]);
 ```
 
 Het testen van de _PagineringHandler_ :
@@ -49,7 +49,7 @@ const pagineringHandler = new PaginationHandler(
                     subjectStream: client.subjectStream
                 }
             )
-client.fetch('http://localhost:3001/api/pagination', [ pagineringHandler ]); 
+client.fetch('http://tw06v036.ugent.be/api/pagination', [ pagineringHandler ]); 
 ```
 
 Het testen van de _LanguageHandler_ :
@@ -70,7 +70,7 @@ const languageHandler = new LanguageHandler(
                     acceptLanguageHeader: 'nl,en;q=0.8'  //The Accept-Language header string    (supported languages on the server are nl, fr and en)
                 }
             )
-client.fetch('http://localhost:3001/api/language', [ languageHandler ]);
+client.fetch('http://tw06v036.ugent.be/api/language', [ languageHandler ]);
 ```
 
 Hieronder bevindt zich een code snippet voor het testen van de _VersioningHandler_. Het resultaat is voorlopig enkel een link die wordt teruggestuurd van de server. Voor meer info, klik [hier](https://github.com/ddvlanck/LinkedData/wiki/VersioningHandler).
@@ -87,7 +87,7 @@ const versioningHandler = new VersioningHandler({
                 datetime: new Date(2018, 8, 14 ),
                 followLink: false
             })
-client.fetch('http://localhost:3001/api/versioning', [ versioningHandler ]);
+client.fetch('http://tw06v036.ugent.be/api/versioning', [ versioningHandler ]);
 ```
 
 Het is ook mogelijk om meerdere bouwblokken samen te testen. Je maakt hiervoor de handlers aan, zoals hierboven en geeft ze mee in de array. De URL die je hiervoor kan gebruiken is `http://localhost:3001/api/all` :
@@ -107,5 +107,5 @@ const pagineringHandler = new PaginationHandler(
                     subjectStream: client.subjectStream
                 }
             );
-client.fetch('http://localhost:3001/api/all', [ metadataHandler, pagineringHandler ]);
+client.fetch('http://tw06v036.ugent.be/api/all', [ metadataHandler, pagineringHandler ]);
 ```
