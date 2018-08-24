@@ -19,7 +19,7 @@ Om gebruik te kunnen maken is een [ApiClient](https://github.com/ddvlanck/Linked
 
 ## Testen
 
-De eenvoudigste manier is om deze repository te clonen naar de eigen computer. In het bestand **index.ts** kunnne de verschillende _code snippets_ (zie onder) geplaatst worden om deze te testen. De eerste keer na het clonen moet het commando **npm run build** uitgevoerd worden. Daarna en alle volgende keren volstaat het om **node index.js** uit te voeren.
+De eenvoudigste manier is om deze repository te clonen naar de eigen computer. In het bestand **index.ts** kunnen de verschillende _code snippets_ (zie onder) geplaatst worden om deze te testen. De eerste keer na het clonen moet het commando `npm run build` uitgevoerd worden. Daarna en alle volgende keren volstaat het om `node index.js` uit te voeren.
 
 Om te testen kan gebruik gemaakt worden van de [Generieke-Hypermedia-API-Client-Testserver](https://github.com/ddvlanck/generic-hypermedia-api-client-testserver). Dit is een server die enkel data teruggeeft en is te bereiken op `http://tw06v036.ugent.be/api`.
 
@@ -45,7 +45,7 @@ Voorbeeld data voor metadataHandler:
 };
 ```
 
-Meer voorbeelden kunnen gevonden worden bij de beschrijving van de bouwblokken in de volgende [repository](https://github.com/Informatievlaanderen/generieke-hypermedia-api).
+Meer voorbeelden kunnen gevonden worden bij de beschrijving van de bouwblokken in de repository van de [Generieke Hypermedia API](https://github.com/Informatievlaanderen/generieke-hypermedia-api).
 
 ## Testen van de bouwblokken - Voorbeelden
 
