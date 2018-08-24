@@ -2,16 +2,18 @@
 
 Er wordt gebouwd aan een specificatie van generieke bouwblokken voor API's in Vlaanderen. Dit is deel van de onderzoeksgroep [Werkgroep datastandaarden van het Stuurorgaan](https://overheid.vlaanderen.be/stuurorgaan-werkgroepen).
 
-Een [generieke hypermedia API](https://github.com/Informatievlaanderen/generieke-hypermedia-api) beschrijft in elke respons de verdere stappen die vanaf dat punt kunnen worden genomen met Hypermedia controls. Een client kan vervolgens een generieke afhandeling voorzien voor elk van deze bouwblokken. In deze repository gebeurt de _clientside_ implementatie van deze bouwblokken.
+Een [generieke hypermedia API](https://github.com/Informatievlaanderen/generieke-hypermedia-api) beschrijft in elke respons de verdere stappen die vanaf dat punt kunnen worden genomen met Hypermedia controls. Een client kan vervolgens een generieke afhandeling voorzien voor elk van deze bouwblokken. In deze repository wordt de _clientside_ implementatie van deze bouwblokken voorzien.
 
 # Implementatie van de generieke bouwblokken
 
 De bouwblokken die reeds geïmplementeerd zijn:
 
-* [Metadata](https://github.com/ddvlanck/LinkedData/wiki/MetadataHandler)
-* [Paginering](https://github.com/ddvlanck/LinkedData/wiki/PaginationHandler)
-* [Taal](https://github.com/ddvlanck/LinkedData/wiki/LanguageHandler)
-* [Versionering](https://github.com/ddvlanck/LinkedData/wiki/VersioningHandler)
+* [Metadata](https://github.com/ddvlanck/generic-hypermedia-api-client/wiki/MetadataHandler)
+* [Paginering](https://github.com/ddvlanck/generic-hypermedia-api-client/wiki/PaginationHandler)
+* [Taal](https://github.com/ddvlanck/generic-hypermedia-api-client/wiki/LanguageHandler)
+* [Versionering](https://github.com/ddvlanck/generic-hypermedia-api-client/wiki/VersioningHandler)
+* [Full Text Search](https://github.com/ddvlanck/generic-hypermedia-api-client/wiki/FullTextSearchHandler)
+* [CRUD](https://github.com/ddvlanck/generic-hypermedia-api-client/wiki/CRUDHandler)
 
 Om gebruik te kunnen maken is een [ApiClient](https://github.com/ddvlanck/LinkedData/wiki/ApiClient) nodig 
 
