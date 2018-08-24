@@ -104,7 +104,7 @@ export class MetadataApiHandler implements IApiHandler {
             }
         }
 
-        this.baseIRI = response.url;
+        this.baseIRI = response.url
     }
 
     onQuad(quad: RDF.Quad) {
@@ -164,7 +164,7 @@ export class MetadataApiHandler implements IApiHandler {
         let match = {};
 
         if (quad.predicate.equals(MetadataApiHandler.API_DOCUMENTATION)) {
-            match['apiDocumentation'] = this.baseIRI + quad.object.value;
+            match['apiDocumentation'] = quad.object.value;
         }
 
         if(quad.predicate.equals(MetadataApiHandler.API_DESCRIPTION)){

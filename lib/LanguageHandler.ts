@@ -60,6 +60,7 @@ export class LanguageHandler implements IApiHandler {
                     this.quadStream.unshift(quad);
                 }
             } else {
+                console.log(quad);
                 this.quadStream.unshift(quad);
             }
         }

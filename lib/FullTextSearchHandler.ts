@@ -55,11 +55,6 @@ export class FullTextSearchHandler implements IApiHandler {
         this.quadStream = new Readable({objectMode: true});
         this.quadStream._read = () => {};
 
-        this.quadStream.on('data', (data) => {
-            console.log(data);
-        })
-
-
         this.callback({stream: this.quadStream});
     }
 
@@ -145,7 +140,7 @@ export class FullTextSearchHandler implements IApiHandler {
                 }
             }
         } else {
-            //this.quadStream.unshift(quad);
+            this.quadStream.unshift(quad);
         }
     }
 
@@ -188,8 +183,6 @@ export class FullTextSearchHandler implements IApiHandler {
                 this.apiClient.fetch(queryURL, [this]);
                 this.parameterURLFetched = true;
             }
-        } /*else {
-           this.quadStream.unshift(null);
-        }*/
+        }
     }
 }

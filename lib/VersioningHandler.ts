@@ -44,10 +44,6 @@ export class VersioningHandler implements IApiHandler {
         this.stream = new Readable({ objectMode: true});
         this.stream._read = () => {};
 
-        this.stream.on('data', (data) => {
-            console.log(data);
-        })
-
         this.versionCallback({stream: this.stream});
     }
 

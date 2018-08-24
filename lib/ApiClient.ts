@@ -56,17 +56,16 @@ export class ApiClient {
      */
     fetch(url: string, handlers: IApiHandler[]): void {
         let headers = new Headers();
-        handlers.filter(handler => {
-            if (handler.constructor.name === 'LanguageHandler') {
-                const object = handler as LanguageHandler;
-                headers.append('Accept-Language', object.acceptLanguageHeader);
-            } else if (handler.constructor.name === 'VersioningHandler') {
-                const object = handler as VersioningHandler;
-                if (object.datetime) {
-                    headers.append('Accept-Datetime', object.datetime.toString());
-                }
-            }
-        });
+        const languageHandler = this.getHandler('LanguageHandler', handlers) as LanguageHandler;
+        const versioningHandler = this.getHandler('VersioningHandler', handlers) as VersioningHandler;
+
+        if(languageHandler){
+            headers.append('Accept-Language', languageHandler.acceptLanguageHeader);
+        }
+
+        if(versioningHandler){
+            headers.append('Accept-Datetime', versioningHandler.datetime.toString());
+        }
 
         //Fetch URL given as parameter
         this.fetcher(url, {headers: headers}).then(response => {
@@ -82,10 +81,10 @@ export class ApiClient {
                 for (let i = 0; i < handlers.length; i++) {
                     handlers[i].onFetch(response);
                 }
+
                 try {
                     const contentType = contentTypeParser.parse(response.headers.get('content-type')).type;
                     let parser = formats.parsers.find(contentType);
-
                     if (parser) {
                         const stream = new parser.Impl(response.body, {baseIRI: response.url});
                         stream.on('data', (quad) => {
@@ -114,75 +113,50 @@ export class ApiClient {
                             console.error('ERROR (ApiClient): ' + error);
                         });
                     } else {
-                        handlers.filter((handler) => {
-                            //FullTextSearchHandler
-                            //If the content-type is JSON , use FILTER parameter and queryValue in constructor to fetch new URL
-                            //If content-type is no RDF or JSON, check if instance has queryKey and queryValue and fetch URL with this parameters
-                            if (handler.constructor.name === 'FullTextSearchHandler') {
-                                let object = handler as FullTextSearchHandler;
-
-                                if (!object.parameterURLFetched) {
-                                    let querystring = '';
-                                    if (contentType.toLocaleLowerCase() === 'application/json') {
-                                        if (object.queryValues.length > 1) {
-                                            if (!object.queryKeys) {
-                                                throw new Error('(FullTextSearchHandler): please give queryKeys in the constructor');
-                                            } else {
-                                                if (object.queryKeys.length === object.queryValues.length) {
-                                                    for (let index in object.queryValues) {
-                                                        querystring += 'filter[' + object.queryKeys[index] + ']=' + object.queryValues[index] + '&';
-                                                    }
-                                                } else {
-                                                    throw new Error('(FullTextSearchHandler): there are not as many keys as values');
-                                                }
-                                            }
-                                        } else {
-                                            querystring += 'filter=' + object.queryValues[0];
-                                        }
-                                    } else {
-                                        if (object.queryValues.length !== object.queryValues.length) {
-                                            throw new Error('(FullTextSearchHandler): there are not as many keys as values');
-                                        } else {
-                                            for (let index in object.queryValues) {
-                                                querystring += object.queryKeys[index] + '=' + object.queryValues[index] + '&';
-                                            }
-                                        }
+                        //Full Text Search Handler
+                        const fullTextSearchHandler = this.getHandler('FullTextSearchHandler', handlers) as FullTextSearchHandler;
+                        let querystring = '';
+                        if(fullTextSearchHandler && !fullTextSearchHandler.parameterURLFetched){
+                            if(contentType.toLocaleLowerCase() === 'application/json' && fullTextSearchHandler.queryValues.length > 1){
+                                if(!fullTextSearchHandler.queryKeys){
+                                    throw new Error('(FullTextSearchHandler): please give queryKeys in the constructor');
+                                } else if(fullTextSearchHandler.queryKeys.length === fullTextSearchHandler.queryValues.length){
+                                    for(let index in fullTextSearchHandler.queryValues){
+                                        querystring += 'filter[' + fullTextSearchHandler.queryKeys[index] + ']=' + fullTextSearchHandler.queryValues[index] + '&';
                                     }
-
-                                    if (querystring.substr(querystring.length - 1, 1) === '&') {
-                                        querystring = querystring.substr(0, querystring.length - 1);
-                                    }
-
-                                    querystring = '?' + querystring;
-                                    const queryURL = response.url + querystring;
-                                    this.fetch(queryURL, [handler]);
-                                    object.parameterURLFetched = true;
-
                                 } else {
-                                    if (contentType === 'application/json') {
-                                        response.json().then((json) => {
-                                            object.quadStream.unshift(json);
-                                        });
-                                    } else {
-                                        response.text().then((text) => {
-                                            object.quadStream.unshift(text);
-                                        })
-                                    }
+                                    throw new Error('(FullTextSearchHandler): there are not as many keys as values');
                                 }
-                            } else if (handler.constructor.name === 'VersioningHandler') {
-                                const object = handler as VersioningHandler;
-                                //If the body is HTML or some type that can't be parsed, we have to stream the body to the client
-                                if (contentType === 'application/json') {
-                                    response.json().then((json) => {
-                                        object.stream.unshift(json);
-                                    });
+                            } else if(contentType.toLocaleLowerCase() === 'application/json' && fullTextSearchHandler.queryValues.length > 0){
+                                querystring += 'filter=' + fullTextSearchHandler.queryValues[0];
+                            } else {
+                                if (fullTextSearchHandler.queryValues.length !== fullTextSearchHandler.queryValues.length) {
+                                    throw new Error('(FullTextSearchHandler): there are not as many keys as values');
                                 } else {
-                                    response.text().then((text) => {
-                                        object.stream.unshift(text);
-                                    })
+                                    for (let index in fullTextSearchHandler.queryValues) {
+                                        querystring += fullTextSearchHandler.queryKeys[index] + '=' + fullTextSearchHandler.queryValues[index] + '&';
+                                    }
                                 }
                             }
-                        })
+
+                            if (querystring.substr(querystring.length - 1, 1) === '&') {
+                                querystring = querystring.substr(0, querystring.length - 1);
+                            }
+
+                            querystring = '?' + querystring;
+                            const queryURL = response.url + querystring;
+                            this.fetch(queryURL, [fullTextSearchHandler]);
+                            fullTextSearchHandler.parameterURLFetched = true;
+                        } else if(fullTextSearchHandler && fullTextSearchHandler.parameterURLFetched){
+                            this.streamBodyToClient(fullTextSearchHandler.quadStream, contentType, response);
+                        }
+
+                        //VersioningHandler
+                        const versioningHandler = this.getHandler('VersioningHandler', handlers) as VersioningHandler;
+                        if(versioningHandler){
+                            //If the body is HTML or some type that can't be parsed, we have to stream the body to the client
+                            this.streamBodyToClient(versioningHandler.stream, contentType, response);
+                        }
                     }
 
                 } catch (e) {
@@ -192,6 +166,28 @@ export class ApiClient {
                 console.error('Error: ' + e.message);
             }
         })
+    }
+
+    private getHandler(name: string, handlers: IApiHandler[]): IApiHandler {
+        let handler = null;
+        for(let index in handlers){
+            if(handlers[index].constructor.name === name){
+                handler = handlers[index];
+            }
+        }
+        return handler;
+    }
+
+    private streamBodyToClient(stream: Readable, contentType: string, response: Response): void {
+        if(contentType.toLocaleLowerCase() === 'application/json'){
+            response.json().then( data => {
+                stream.unshift(data);
+            })
+        } else {
+            response.text().then( data => {
+                stream.unshift(data);
+            })
+        }
     }
 }
 
