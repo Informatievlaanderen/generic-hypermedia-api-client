@@ -19,20 +19,24 @@ export class LanguageHandler implements IApiHandler {
     private streamIsStopped: boolean;
 
     constructor(args: ILanguageArgs){
-        this.languageCallback = args.languageCallback;
-        this.acceptLanguageHeader = args.acceptLanguageHeader;
+        if(!args.acceptLanguageHeader || !args.languageCallback){
+            throw new Error('(LanguageHandler): constructor expects 2 arguments');
+        } else {
+            this.languageCallback = args.languageCallback;
+            this.acceptLanguageHeader = args.acceptLanguageHeader;
 
-        //Create a Readable stream
-        try {
-            this.quadStream = new Readable({ objectMode: true});
-            this.quadStream._read = () => {};
-            this.languageCallback({stream: this.quadStream});
-            this.streamIsStopped = false;
-        } catch (e) {
-            this.streamIsStopped = true;
-            console.log('ERROR (LanguageHandler): ' + e);
+            //Create a Readable stream
+            try {
+                this.quadStream = new Readable({objectMode: true});
+                this.quadStream._read = () => {
+                };
+                this.languageCallback({stream: this.quadStream});
+                this.streamIsStopped = false;
+            } catch (e) {
+                this.streamIsStopped = true;
+                console.log('ERROR (LanguageHandler): ' + e);
+            }
         }
-
     }
 
     onFetch(response: Response) {

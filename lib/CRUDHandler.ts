@@ -21,8 +21,14 @@ export class CRUDHandler implements IApiHandler {
 
     private responseURL: RDF.NamedNode;
 
+    private result = [];
+
     constructor(args: ICrudHandlerArgs){
-        this.crudCallback = args.crudCallback;
+        if(!args.crudCallback){
+            throw new Error('(CRUDHandler): constructor expects 1 argument');
+        } else {
+            this.crudCallback = args.crudCallback;
+        }
     }
 
     onFetch(response: Response) {
@@ -30,7 +36,7 @@ export class CRUDHandler implements IApiHandler {
             const operations = response.headers.get('Allow').split(',');
             if(operations.length > 0){
                 for(let index in operations){
-                    this.crudOperations[operations[index].trim()] = {};
+                    this.result.push({ method: operations[index].trim() });
                 }
             }
         }
@@ -79,7 +85,6 @@ export class CRUDHandler implements IApiHandler {
     }
 
     onEnd() {
-        //TODO : maybe do this also in the onQuad method?
         for(let subjectVal in this.unidentifiedQuads){
             if(this.nodeQuads.indexOf(subjectVal) >= 0){
                 const crudObject = this.unidentifiedQuads[subjectVal];
@@ -93,16 +98,15 @@ export class CRUDHandler implements IApiHandler {
                         }
                     })
                 }
-                delete this.unidentifiedQuads[subjectVal];
+                //delete this.unidentifiedQuads[subjectVal];
             }
         }
 
-        let resultArray = [];
         for(let subjectVal in this.crudOperations){
-            resultArray.push(this.crudOperations[subjectVal]);
+            this.result.push(this.crudOperations[subjectVal]);
         }
-
-        this.crudCallback(resultArray);
+        console.log(this.result);
+        this.crudCallback(this.result);
     }
 
 }

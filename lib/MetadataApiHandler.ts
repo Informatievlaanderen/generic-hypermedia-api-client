@@ -18,7 +18,7 @@ export class MetadataApiHandler implements IApiHandler {
     private apiClient: ApiClient;
     private followDocLink: boolean;    //Boolean that indicates if a found documentation link has to be fetched
 
-    private subjectURLs: Array<string>; //All URLs that need to be checked against.
+    public subjectURLs: Array<string>; //All URLs that need to be checked against.
     private unidentifiedQuads: { [key: string]: Array<object> } = {};    //Contains all quads whose URL (subject) has not been discovered (yet).
     private identifiedQuads: { [key: string]: Array<object> } = {};      //Contains quads whose subject is in subjectURLs and have a predicate that was matched
 
@@ -65,9 +65,24 @@ export class MetadataApiHandler implements IApiHandler {
         ];
 
     constructor(args: IMetadataHandlerArgs) {
-        this.metadataCallback = args.metadataCallback;
-        this.apiClient = args.apiClient;
-        this.followDocLink = args.followDocumentationLink;
+        if(!args.metadataCallback || !args.apiClient){
+            throw new Error('(MetadataHandler): constructor expects at least 2 arguments');
+        } else {
+            if(args.metadataCallback){
+                this.metadataCallback = args.metadataCallback;
+            }
+            if(args.apiClient){
+                this.apiClient = args.apiClient;
+            }
+            if(args.followDocumentationLink){
+                this.followDocLink = args.followDocumentationLink;
+            } else {
+                this.followDocLink = false;
+            }
+        }
+        // this.metadataCallback = args.metadataCallback;
+        // this.apiClient = args.apiClient;
+        // this.followDocLink = args.followDocumentationLink;
 
         this.subjectURLs = [];
         //Listener for subjectstream from client.

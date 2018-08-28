@@ -33,18 +33,22 @@ export class VersioningHandler implements IApiHandler {
     public stream: Readable;
 
     constructor(args: IVersionHandlerArgs){
-        this.versionCallback = args.versionCallback;
+        if(Object.keys(args).length !== 4){
+            throw new Error('(VersioningHandler): constructor expects 4 arguments');
+        } else {
 
-        this.versionCallback = args.versionCallback
-        this.apiClient = args.apiClient;
-        this.datetime = args.datetime;
-        this.followLink = args.followLink;
+            this.versionCallback = args.versionCallback
+            this.apiClient = args.apiClient;
+            this.datetime = args.datetime;
+            this.followLink = args.followLink;
 
-        this.versionFound = false;
-        this.stream = new Readable({ objectMode: true});
-        this.stream._read = () => {};
+            this.versionFound = false;
+            this.stream = new Readable({objectMode: true});
+            this.stream._read = () => {
+            };
 
-        this.versionCallback({stream: this.stream});
+            this.versionCallback({stream: this.stream});
+        }
     }
 
     onFetch(response: Response) {
@@ -63,8 +67,7 @@ export class VersioningHandler implements IApiHandler {
                 this.versionURL = links.alternate.url;
             }
         } else {
-            console.log('(VersioningHandler) : no versioning for this URL');
-            //throw new Error('(VersioningHandler) : no versioning for this URL');
+            throw new Error('(VersioningHandler) : no versioning for this URL');
         }
 
         if(this.versionURL){

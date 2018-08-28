@@ -14,7 +14,7 @@ interface IPaginationHandlerArgs {
 export class PaginationHandler implements IApiHandler {
     private pagedataCallback: any;
 
-    private subjectURLs: Array<string>;
+    public subjectURLs: Array<string>;
     private unidentifiedQuads: { [key: string]: {} } = {};
     private subjectPageData: { [key: string]: {} } = {};
 
@@ -26,24 +26,27 @@ export class PaginationHandler implements IApiHandler {
     private pagedataFields: Array<string> = ['first', 'next', 'last', 'prev'];
 
     constructor(args: IPaginationHandlerArgs) {
-        this.pagedataCallback = args.pagedataCallback;
-
-        this.subjectURLs = [];
-        args.subjectStream.on('data', (object) => {
-            object = JSON.parse(object.toString());
-            if (object['url']) {
-                this.subjectURLs.push(object['url']);
-            } else if (object['apiDoc']) {
-                this.subjectURLs.unshift(object['apiDoc']);
-            }
-        });
+        if (!args.pagedataCallback || !args.subjectStream) {
+            throw new Error('(PaginationHandler): constructor expects 2 arguments');
+        } else {
+            this.pagedataCallback = args.pagedataCallback;
+            this.subjectURLs = [];
+            args.subjectStream.on('data', (object) => {
+                object = JSON.parse(object.toString());
+                if (object['url']) {
+                    this.subjectURLs.push(object['url']);
+                } else if (object['apiDoc']) {
+                    this.subjectURLs.unshift(object['apiDoc']);
+                }
+            });
+        }
     }
 
     onFetch(response: Response) {
         if (response.headers.has('link')) {
             let result = linkParser(response.headers.get('link'));
             Object.keys(result).forEach((key) => {
-                if(this.pagedataFields.indexOf(key) >= 0 ){
+                if (this.pagedataFields.indexOf(key) >= 0) {
                     this.subjectPageData[key] = {value: result[key]['url'], priority: 0};
                 }
             });

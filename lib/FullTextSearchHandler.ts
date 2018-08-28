@@ -39,28 +39,34 @@ export class FullTextSearchHandler implements IApiHandler {
 
 
     constructor(args: IFullTextSearchHandlerArgs) {
-        this.callback = args.callback;
-        this.queryValues = args.queryValues;
-        this.queryKeys = args.queryKeys;
-        this.apiClient = args.apiClient;
+        if(Object.keys(args).length < 3){
+            throw new Error('(FullTextSearchHandler): constructor expects at least 3 arguments');
+        } else {
 
-        this.apiClient.subjectStream.on('data', (object) => {
-            object = JSON.parse(object.toString());
-            let key = Object.keys(object)[0];
-            this.subjectURLs.push(object[key]);
-        })
 
-        this.parameterURLFetched = false;
+            this.callback = args.callback;
+            this.queryValues = args.queryValues;
+            this.queryKeys = args.queryKeys;
+            this.apiClient = args.apiClient;
 
-        this.quadStream = new Readable({objectMode: true});
-        this.quadStream._read = () => {};
+            this.apiClient.subjectStream.on('data', (object) => {
+                object = JSON.parse(object.toString());
+                let key = Object.keys(object)[0];
+                this.subjectURLs.push(object[key]);
+            })
 
-        this.callback({stream: this.quadStream});
+            this.parameterURLFetched = false;
+
+            this.quadStream = new Readable({objectMode: true});
+            this.quadStream._read = () => {
+            };
+
+            this.callback({stream: this.quadStream});
+        }
     }
 
-    onFetch(response: Response) {
-        //What should we do here?
-    }
+    onFetch(response: Response) {}
+
 
     onQuad(quad: RDF.Quad) {
         if(!this.parameterURLFetched){
@@ -179,7 +185,7 @@ export class FullTextSearchHandler implements IApiHandler {
                     object[this.templateKeys[index]] = this.queryValues[index];
                 })
                 const queryURL = parsedURL.expand(object);
-                //FETCH IT
+
                 this.apiClient.fetch(queryURL, [this]);
                 this.parameterURLFetched = true;
             }
