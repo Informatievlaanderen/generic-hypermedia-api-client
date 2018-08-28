@@ -1,31 +1,55 @@
-# Generieke Hypermedia API Client
+# Generieke Hypermedia API client
 
 Er wordt gebouwd aan een specificatie van generieke bouwblokken voor API's in Vlaanderen. Dit is deel van de onderzoeksgroep [Werkgroep datastandaarden van het Stuurorgaan](https://overheid.vlaanderen.be/stuurorgaan-werkgroepen).
 
-Een generieke Hypermedia API beschrijft in elke repons de verdere stappen die vanaf dat punt kunnen worden genomen met Hypermedia Controls. Een client kan vervolgens een generieke afhandeling voorzien voor elk van deze bouwblokken.
-
-Hier gebeurt de implementatie van deze bouwblokken voor de client. Meer info vind je [hier](https://github.com/Informatievlaanderen/generieke-hypermedia-api).
+Een [generieke hypermedia API](https://github.com/Informatievlaanderen/generieke-hypermedia-api) beschrijft in elke respons de verdere stappen die vanaf dat punt kunnen worden genomen met Hypermedia controls. Een client kan vervolgens een generieke afhandeling voorzien voor elk van deze bouwblokken. In deze repository wordt de _clientside_ implementatie van deze bouwblokken voorzien.
 
 # Implementatie van de generieke bouwblokken
 
 De bouwblokken die reeds geïmplementeerd zijn:
 
-* [Metadata](https://github.com/ddvlanck/LinkedData/wiki/MetadataHandler)
-* [Paginering](https://github.com/ddvlanck/LinkedData/wiki/PaginationHandler)
-* [Taal](https://github.com/ddvlanck/LinkedData/wiki/LanguageHandler)
-* [Versionering](https://github.com/ddvlanck/LinkedData/wiki/VersioningHandler)
+* [Metadata](https://github.com/ddvlanck/generic-hypermedia-api-client/wiki/MetadataHandler)
+* [Paginering](https://github.com/ddvlanck/generic-hypermedia-api-client/wiki/PaginationHandler)
+* [Taal](https://github.com/ddvlanck/generic-hypermedia-api-client/wiki/LanguageHandler)
+* [Versionering](https://github.com/ddvlanck/generic-hypermedia-api-client/wiki/VersioningHandler)
+* [Full Text Search](https://github.com/ddvlanck/generic-hypermedia-api-client/wiki/FullTextSearchHandler)
+* [CRUD](https://github.com/ddvlanck/generic-hypermedia-api-client/wiki/CRUDHandler)
 
-Om gebruik te kunnen maken van deze bouwblokken is een [ApiClient](https://github.com/ddvlanck/LinkedData/wiki/ApiClient) nodig 
+Om gebruik te kunnen maken is een [ApiClient](https://github.com/ddvlanck/LinkedData/wiki/ApiClient) nodig 
 
 ## Testen
 
-De eenvoudigste manier is om een ZIP te downloaden van het project. In het bestand **index.ts** kunnen de verschillende bouwblokken getest worden. Om een bouwblok te kunnen testen is altijd een _ApiClient_ nodig. De _fetch-methode_ van deze client verwacht een URL en een array van handlers.
+De eenvoudigste manier is om deze repository te clonen naar de eigen computer. In het bestand **index.ts** kunnen de verschillende _code snippets_ (zie onder) geplaatst worden om deze te testen. De eerste keer na het clonen moet het commando `npm run build` uitgevoerd worden. Daarna en alle volgende keren volstaat het om `node index.js` uit te voeren.
 
-De eerste keer moet het commando **npm run build** uitgevoerd worden. Daarna kan getest worden door het commando **node index.js** uit te voeren.
+Om te testen kan gebruik gemaakt worden van de [Generieke-Hypermedia-API-Client-Testserver](https://github.com/ddvlanck/generic-hypermedia-api-client-testserver). Dit is een server die enkel data teruggeeft en is te bereiken op `http://tw06v036.ugent.be/api`.
 
-## Voorbeelden
+Voorbeeld data voor metadataHandler:
 
-Het testen van de _MetadataHandler_ :
+```
+{
+        "@context": [
+            "http://www.w3.org/ns/hydra/context.jsonld",
+            "https://raw.githubusercontent.com/SEMICeu/DCAT-AP/master/releases/1.1/dcat-ap_1.1.jsonld",
+            {
+                "hydra": "http://www.w3.org/ns/hydra/core#",
+                "dc": "http://purl.org/dc/terms/",
+                "dcat": "https://www.w3.org/ns/dcat#",
+                "hydra:apiDocumentation" : { "@type" : "@id"}
+            }
+        ],
+        "@id": "/api",
+        "@type": ["EntryPoint", "Distribution"],
+        "hydra:apiDocumentation": "/api/documentation",
+        "dc:issued": "2016-01-10",
+        "dc:modified": "2018-07-24"
+};
+```
+
+Meer voorbeelden kunnen gevonden worden bij de beschrijving van de bouwblokken in de repository van de [Generieke Hypermedia API](https://github.com/Informatievlaanderen/generieke-hypermedia-api).
+
+## Testen van de bouwblokken - Voorbeelden
+
+* MetadataHandler 
 
 ```typescript
 const client = new ApiClient(null);
@@ -39,7 +63,7 @@ const metadataHandler = new MetadataApiHandler(
 client.fetch('http://tw06v036.ugent.be/api', [ metadataHandler ]);
 ```
 
-Het testen van de _PagineringHandler_ :
+* PaginationHandler
 
 ```typescript
 const client = new ApiClient(null);
@@ -52,7 +76,7 @@ const pagineringHandler = new PaginationHandler(
 client.fetch('http://tw06v036.ugent.be/api/pagination', [ pagineringHandler ]); 
 ```
 
-Het testen van de _LanguageHandler_ :
+* LanguageHandler
 
 ```typescript
 const client = new ApiClient(null);
@@ -73,7 +97,7 @@ const languageHandler = new LanguageHandler(
 client.fetch('http://tw06v036.ugent.be/api/language', [ languageHandler ]);
 ```
 
-Hieronder bevindt zich een code snippet voor het testen van de _VersioningHandler_. Het resultaat is voorlopig enkel een link die wordt teruggestuurd van de server. Voor meer info, klik [hier](https://github.com/ddvlanck/LinkedData/wiki/VersioningHandler).
+* VersioningHandler
 
 ```typescript
 const client = new ApiClient(null);
@@ -90,7 +114,34 @@ const versioningHandler = new VersioningHandler({
 client.fetch('http://tw06v036.ugent.be/api/versioning', [ versioningHandler ]);
 ```
 
-Het is ook mogelijk om meerdere bouwblokken samen te testen. Je maakt hiervoor de handlers aan, zoals hierboven en geeft ze mee in de array. De URL die je hiervoor kan gebruiken is `http://localhost:3001/api/all` :
+* FullTextSearchHandler
+
+```typescript
+const client = new ApiClient(null);
+const fts = new FullTextSearchHandler({
+        callback: (fts) => {
+            fts.stream.on('data', (data) => {
+                console.log(data);
+            })
+        },
+        apiClient: client,
+        queryValues: ['Bob']
+        //queryKeys: ['Naam']   //Optioneel
+});
+client.fetch('http://tw06v036.ugent.be/api/fullTextSearch', [ fts ]);
+```
+
+* CRUDHandler
+
+```typescript
+const client = new ApiClient(null);
+const crud = new CRUDHandler({
+        crudCallback: (crud) => console.log(crud)
+});
+client.fetch('http://tw06v036.ugent.be/api/crud/1', [ crud ]);
+```
+
+Het is ook mogelijk om meerdere bouwblokken samen te testen. Je maakt de handlers aan, zoals hierboven beschreven en geeft ze mee in de array. De URL die je hier best voor gebruikt is `http://tw06v036.ugent.be/api/all`. 
 
 ```typescript
 const client = new ApiClient(null);
@@ -109,3 +160,5 @@ const pagineringHandler = new PaginationHandler(
             );
 client.fetch('http://tw06v036.ugent.be/api/all', [ metadataHandler, pagineringHandler ]);
 ```
+
+
