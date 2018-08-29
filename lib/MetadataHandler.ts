@@ -283,18 +283,13 @@ export class MetadataHandler implements IApiHandler {
             }
         }
 
-        if (metadataObject['apiDocumentation']) {
-            if (this.followDocLink) {
-                this.apiClient.fetch(metadataObject['apiDocumentation'], [this]);
-                this.apiClient.subjectStream.unshift(JSON.stringify({apiDoc: metadataObject['apiDocumentation']}));
-                this.followDocLink = false;
-            } else {
-                if (Object.keys(metadataObject).length > 0) {
-                    this.metadataCallback(metadataObject);
-                }
-            }
+        if(metadataObject['apiDocumentation'] && this.followDocLink){
+            this.apiClient.fetch(metadataObject['apiDocumentation'], [this]);
+            this.apiClient.subjectStream.unshift(JSON.stringify({apiDoc: metadataObject['apiDocumentation']}));
+            this.followDocLink = false;
         } else {
             if(Object.keys(metadataObject).length > 0){
+                console.log('This metadata was found: ');
                 this.metadataCallback(metadataObject);
             }
         }

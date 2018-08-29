@@ -22,6 +22,9 @@
     ],
     "collectCoverage": true
   },
+  "bin" : {
+    "generic-hypermedia-api-client" : "./bin/generic-hypermedia-api-client.js"
+  },
   "scripts": {
     "test": "jest ${1}",
     "test-watch": "jest ${1} --watch",
@@ -44,6 +47,7 @@
     "content-type": "^1.0.4",
     "es6-promise": "^4.2.4",
     "isomorphic-fetch": "^2.2.1",
+    "minimist": "^1.2.0",
     "parse-link-header": "^1.0.1",
     "rdf": "^4.0.1",
     "rdf-ext": "^1.1.0",

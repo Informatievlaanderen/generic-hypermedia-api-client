@@ -136,6 +136,7 @@ export class PaginationHandler implements IApiHandler {
                 pagedataObject[pagedataField] = this.subjectPageData[pagedataField]['value'];
             }
         }
+        console.log('This pagedata was found: ');
         this.pagedataCallback(pagedataObject);
     }
 }
