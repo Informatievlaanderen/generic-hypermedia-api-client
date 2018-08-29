@@ -19,7 +19,7 @@ export class CRUDHandler implements IApiHandler {
     private unidentifiedQuads: Array<object> = [];  //Quads whose subject was not discovered yet
     private nodeQuads: Array<Object> = [];  //Quads who have an object that is not a Literal
 
-    private responseURL: RDF.NamedNode;
+    private responseURL: any;   //RDF.NamedNode
 
     private result = [];
 
@@ -105,7 +105,7 @@ export class CRUDHandler implements IApiHandler {
         for(let subjectVal in this.crudOperations){
             this.result.push(this.crudOperations[subjectVal]);
         }
-        console.log(this.result);
+
         this.crudCallback(this.result);
     }
 

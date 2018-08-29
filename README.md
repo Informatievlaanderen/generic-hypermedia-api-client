@@ -53,7 +53,7 @@ Meer voorbeelden kunnen gevonden worden bij de beschrijving van de bouwblokken i
 
 ```typescript
 const client = new ApiClient(null);
-const metadataHandler = new MetadataApiHandler(
+const metadataHandler = new MetadataHandler(
                 {
                     metadataCallback: (metadata) => console.log(metadata),
                     apiClient: client,
@@ -145,7 +145,7 @@ Het is ook mogelijk om meerdere bouwblokken samen te testen. Je maakt de handler
 
 ```typescript
 const client = new ApiClient(null);
-const metadataHandler = new MetadataApiHandler(
+const metadataHandler = new MetadataHandler(
                 {
                     metadataCallback: (metadata) => console.log(metadata),
                     apiClient: client,

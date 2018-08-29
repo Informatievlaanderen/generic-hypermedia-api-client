@@ -12,7 +12,7 @@ export interface IMetadataHandlerArgs {
     followDocumentationLink?: boolean;
 }
 
-export class MetadataApiHandler implements IApiHandler {
+export class MetadataHandler implements IApiHandler {
 
     private metadataCallback: (data) => void;
     private apiClient: ApiClient;
@@ -106,8 +106,7 @@ export class MetadataApiHandler implements IApiHandler {
             }
 
             let object = linkParser(response.headers.get('link'));
-            let link = object[RdfTerm.termToString(MetadataApiHandler.API_DOCUMENTATION)].url;
-
+            let link = object[RdfTerm.termToString(MetadataHandler.API_DOCUMENTATION)].url;
             const priority = this.subjectURLs.indexOf(response.url);
 
             if(!this.identifiedQuads['apiDocumentation']){
@@ -118,7 +117,6 @@ export class MetadataApiHandler implements IApiHandler {
                 this.identifiedQuads['apiDocumentation'].push({ value: link, priority: priority+1});
             }
         }
-
         this.baseIRI = response.url
     }
 
@@ -178,60 +176,60 @@ export class MetadataApiHandler implements IApiHandler {
     checkPredicates(quad: RDF.Quad, dataCallback: (data) => void) {
         let match = {};
 
-        if (quad.predicate.equals(MetadataApiHandler.API_DOCUMENTATION)) {
+        if (quad.predicate.equals(MetadataHandler.API_DOCUMENTATION)) {
             match['apiDocumentation'] = quad.object.value;
         }
 
-        if(quad.predicate.equals(MetadataApiHandler.API_DESCRIPTION)){
+        if(quad.predicate.equals(MetadataHandler.API_DESCRIPTION)){
             match['apiDescription'] = quad.object.value; //RdfTerm.termToString(quad.object);
         }
 
-        if(quad.predicate.equals(MetadataApiHandler.API_LICENSE)){
+        if(quad.predicate.equals(MetadataHandler.API_LICENSE)){
             match['apiLicense'] = quad.object.value; //RdfTerm.termToString(quad.object);
         }
 
-        if(quad.predicate.equals(MetadataApiHandler.API_ISSUED)){
+        if(quad.predicate.equals(MetadataHandler.API_ISSUED)){
             match['apiIssued'] = quad.object.value; //RdfTerm.termToString(quad.object);
         }
 
-        if(quad.predicate.equals(MetadataApiHandler.API_MODIFIED)){
+        if(quad.predicate.equals(MetadataHandler.API_MODIFIED)){
             match['apiModified'] = quad.object.value; //RdfTerm.termToString(quad.object);
         }
 
-        if (quad.predicate.equals(MetadataApiHandler.API_TITLE_1) || quad.predicate.equals(MetadataApiHandler.API_TITLE_2)) {
+        if (quad.predicate.equals(MetadataHandler.API_TITLE_1) || quad.predicate.equals(MetadataHandler.API_TITLE_2)) {
             match['apiTitle'] = quad.object.value; //RdfTerm.termToString(quad.object);
         }
 
-        if (quad.predicate.equals(MetadataApiHandler.API_CONTACT_POINT) || quad.predicate.equals(MetadataApiHandler.API_TEMPORAL) || quad.predicate.equals(MetadataApiHandler.API_SPATIAL)) {
+        if (quad.predicate.equals(MetadataHandler.API_CONTACT_POINT) || quad.predicate.equals(MetadataHandler.API_TEMPORAL) || quad.predicate.equals(MetadataHandler.API_SPATIAL)) {
             //Check if there are triples with this quad its object as subject
             //If so, store them with the subject URL of this triple (schema:contactPoint)
             this.myQuads.push(quad);
         }
 
         //Belongs to schema:contactPoint
-        if (quad.predicate.equals(MetadataApiHandler.API_CONTACT_NAME)) {
+        if (quad.predicate.equals(MetadataHandler.API_CONTACT_NAME)) {
             match['apiContactName'] = quad.object.value; //RdfTerm.termToString(quad.object);
         }
 
         //Belongs to schema:contactPoint
-        if (quad.predicate.equals(MetadataApiHandler.API_CONTACT_EMAIL)) {
+        if (quad.predicate.equals(MetadataHandler.API_CONTACT_EMAIL)) {
             match['apiContactEmail'] = quad.object.value; //RdfTerm.termToString(quad.object);
         }
 
         //Belongs to schema:contactPoint?
-        if (quad.predicate.equals(MetadataApiHandler.API_CONTACT_TELEPHONE)) {
+        if (quad.predicate.equals(MetadataHandler.API_CONTACT_TELEPHONE)) {
             match['apiContactTelephone'] = quad.object.value; //RdfTerm.termToString(quad.object);
         }
 
-        if (quad.predicate.equals(MetadataApiHandler.API_GEOMETRY)) {
+        if (quad.predicate.equals(MetadataHandler.API_GEOMETRY)) {
             match['geometry'] = quad.object.value; //RdfTerm.termToString(quad.object);
         }
 
-        if (quad.predicate.equals(MetadataApiHandler.API_START_DATE)) {
+        if (quad.predicate.equals(MetadataHandler.API_START_DATE)) {
             match['temporalStartDate'] = quad.object.value; //RdfTerm.termToString(quad.object);
         }
 
-        if (quad.predicate.equals(MetadataApiHandler.API_END_DATE)) {
+        if (quad.predicate.equals(MetadataHandler.API_END_DATE)) {
             match['temporalEndDate'] = quad.object.value; //RdfTerm.termToString(quad.object);
         }
 
@@ -296,7 +294,6 @@ export class MetadataApiHandler implements IApiHandler {
                 }
             }
         } else {
-
             if(Object.keys(metadataObject).length > 0){
                 this.metadataCallback(metadataObject);
             }

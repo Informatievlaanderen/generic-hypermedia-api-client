@@ -10,7 +10,8 @@ const template = require('url-template');
 interface IFullTextSearchHandlerArgs {
     callback: (data) => void;
     apiClient: ApiClient;
-    queryValues: Array<string>,
+    fetchQueryURL: boolean;
+    queryValues?: Array<string>,
     queryKeys?: Array<string>;
 }
 
@@ -26,7 +27,7 @@ export class FullTextSearchHandler implements IApiHandler {
     public queryKeys: Array<string> = [];
     private apiClient: ApiClient;
 
-    private subjectURLs: Array<string> = [];
+    public subjectURLs: Array<string> = [];
     public quadStream: Readable;
 
     private mappingQuads: Array<Object> = [];
@@ -36,24 +37,29 @@ export class FullTextSearchHandler implements IApiHandler {
     private templateKeys: Array<string> = [];
 
     public parameterURLFetched: boolean;
+    public fetchQueryURL: boolean;
 
 
     constructor(args: IFullTextSearchHandlerArgs) {
         if(Object.keys(args).length < 3){
-            throw new Error('(FullTextSearchHandler): constructor expects at least 3 arguments');
+            throw new Error('(FullTextSearchHandler): constructor expects at least 2 arguments');
         } else {
-
-
             this.callback = args.callback;
-            this.queryValues = args.queryValues;
-            this.queryKeys = args.queryKeys;
             this.apiClient = args.apiClient;
+            this.fetchQueryURL = args.fetchQueryURL;
+            if(this.fetchQueryURL){
+                if(!args.queryValues){
+                    throw new Error('(FullTextSearchHandler): in order to fetch the template URL, you need to give query values');
+                }
+                this.queryValues = args.queryValues;
+            }
+            this.queryKeys = args.queryKeys ? args.queryKeys : [];
 
             this.apiClient.subjectStream.on('data', (object) => {
                 object = JSON.parse(object.toString());
                 let key = Object.keys(object)[0];
                 this.subjectURLs.push(object[key]);
-            })
+            });
 
             this.parameterURLFetched = false;
 
@@ -104,7 +110,6 @@ export class FullTextSearchHandler implements IApiHandler {
                     if (!this.unidentifiedQuads[RdfTerm.termToString(quad.subject)]) {
                         this.unidentifiedQuads[RdfTerm.termToString(quad.subject)] = {};
                     }
-
                     if (data['templateURL']) {
                         this.unidentifiedQuads[RdfTerm.termToString(quad.subject)]['templateURL'] = data['templateURL'];
                     } else if (data['templateKey']) {
@@ -174,20 +179,25 @@ export class FullTextSearchHandler implements IApiHandler {
     }
 
     onEnd() {
-        if(!this.parameterURLFetched){
-            if(this.templateURL && this.templateKeys.length > 0){
-                let parsedURL = template.parse(this.templateURL);
+        if(!this.parameterURLFetched && this.templateURL){
+            if(!this.fetchQueryURL){
 
-                //The array of values has to have the same length of the array of templateKeys
-                //TODO : now client somehow needs to know how many keys there will be, maybe other way to implement it?
-                let object = {}
-                Object.keys(this.templateKeys).forEach( (index) => {
-                    object[this.templateKeys[index]] = this.queryValues[index];
-                })
-                const queryURL = parsedURL.expand(object);
+                this.quadStream.unshift(this.templateURL);
+            } else {
+                if(this.templateKeys.length > 0){
+                    let parsedURL = template.parse(this.templateURL);
 
-                this.apiClient.fetch(queryURL, [this]);
-                this.parameterURLFetched = true;
+                    //The array of values has to have the same length of the array of templateKeys
+                    //TODO : now client somehow needs to know how many keys there will be, maybe other way to implement it?
+                    let object = {}
+                    Object.keys(this.templateKeys).forEach((index) => {
+                        object[this.templateKeys[index]] = this.queryValues[index];
+                    })
+                    const queryURL = parsedURL.expand(object);
+
+                    this.apiClient.fetch(queryURL, [this]);
+                    this.parameterURLFetched = true;
+                }
             }
         }
     }

@@ -145,8 +145,13 @@ export class ApiClient {
 
                             querystring = '?' + querystring;
                             const queryURL = response.url + querystring;
-                            this.fetch(queryURL, [fullTextSearchHandler]);
-                            fullTextSearchHandler.parameterURLFetched = true;
+
+                            if(fullTextSearchHandler.fetchQueryURL){
+                                this.fetch(queryURL, [fullTextSearchHandler]);
+                                fullTextSearchHandler.parameterURLFetched = true;
+                            } else {
+                                fullTextSearchHandler.quadStream.unshift(queryURL);
+                            }
                         } else if(fullTextSearchHandler && fullTextSearchHandler.parameterURLFetched){
                             this.streamBodyToClient(fullTextSearchHandler.quadStream, contentType, response);
                         }
