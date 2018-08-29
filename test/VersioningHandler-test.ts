@@ -106,5 +106,5 @@ describe('The VersioningHandler module', () => {
         });
         expect(() => versioningHandler.onFetch(response)).toThrow();
     });
-    
+
 })
