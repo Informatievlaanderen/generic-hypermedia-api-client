@@ -181,14 +181,11 @@ export class FullTextSearchHandler implements IApiHandler {
     onEnd() {
         if(!this.parameterURLFetched && this.templateURL){
             if(!this.fetchQueryURL){
-
                 this.quadStream.unshift(this.templateURL);
             } else {
                 if(this.templateKeys.length > 0){
                     let parsedURL = template.parse(this.templateURL);
 
-                    //The array of values has to have the same length of the array of templateKeys
-                    //TODO : now client somehow needs to know how many keys there will be, maybe other way to implement it?
                     let object = {}
                     Object.keys(this.templateKeys).forEach((index) => {
                         object[this.templateKeys[index]] = this.queryValues[index];

@@ -103,7 +103,6 @@ export class ApiClient {
 
                         stream.on('end', () => {
                             for (let i = 0; i < handlers.length; i++) {
-                                console.log('Stream is done for [' + handlers[i].constructor.name + ']');
                                 handlers[i].onEnd();
                             }
                         });
@@ -149,7 +148,8 @@ export class ApiClient {
                             if(fullTextSearchHandler.fetchQueryURL){
                                 this.fetch(queryURL, [fullTextSearchHandler]);
                                 fullTextSearchHandler.parameterURLFetched = true;
-                            } else {
+                            } else if(querystring.indexOf('?') !== querystring.length-1) {
+                                //We make sure that only correct queryURLs are returned
                                 fullTextSearchHandler.quadStream.unshift(queryURL);
                             }
                         } else if(fullTextSearchHandler && fullTextSearchHandler.parameterURLFetched){
