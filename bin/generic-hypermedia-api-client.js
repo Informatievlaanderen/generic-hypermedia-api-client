@@ -18,76 +18,88 @@ if (args._.length < 2 || args._.length > 7 || args.h || args.help) {
 }
 function createHandlers(client) {
     var handlers = [];
-    for (var i = 1; i < args._.length; i++) {
-        switch (args._[i]) {
-            case 'metadata':
-                var followDocLink = false;
-                if (args.followdoclink) {
-                    followDocLink = true;
-                }
-                handlers.push(new MetadataHandler_1.MetadataHandler({
-                    metadataCallback: function (metadata) { return console.log(metadata); },
-                    apiClient: client,
-                    followDocumentationLink: followDocLink
-                }));
-                break;
-            case 'pagination':
-                handlers.push(new PaginationHandler_1.PaginationHandler({
-                    pagedataCallback: function (pagedata) { return console.log(pagedata); },
-                    subjectStream: client.subjectStream
-                }));
-                break;
-            case 'language':
-                handlers.push(new LanguageHandler_1.LanguageHandler({
-                    languageCallback: function (languagedata) {
-                        languagedata.stream.on('data', function (data) {
-                            console.log(data);
-                        });
-                    },
-                    acceptLanguageHeader: 'en'
-                }));
-                break;
-            case 'versioning':
-                var followVersionLink = false;
-                if (args.followversionlink) {
-                    followVersionLink = true;
-                }
-                handlers.push(new VersioningHandler_1.VersioningHandler({
-                    versionCallback: function (versiondata) {
-                        versiondata.stream.on('data', function (data) {
-                            console.log(data);
-                        });
-                    },
-                    apiClient: client,
-                    datetime: new Date(),
-                    followLink: followVersionLink
-                }));
-                break;
-            case 'full_text_search':
-                handlers.push(new FullTextSearchHandler_1.FullTextSearchHandler({
-                    callback: function (ftsdata) {
-                        ftsdata.stream.on('data', function (data) {
-                            console.log(data);
-                        });
-                    },
-                    apiClient: client,
-                    fetchQueryURL: false
-                }));
-                break;
-            case 'crud':
-                handlers.push(new CRUDHandler_1.CRUDHandler({
-                    crudCallback: function (cruddata) {
-                        console.log(cruddata);
+    try {
+        for (var i = 1; i < args._.length; i++) {
+            switch (args._[i]) {
+                case 'metadata':
+                    var followDocLink = false;
+                    if (args.followdoclink) {
+                        followDocLink = true;
                     }
-                }));
+                    handlers.push(new MetadataHandler_1.MetadataHandler({
+                        metadataCallback: function (metadata) { return console.log(metadata); },
+                        apiClient: client,
+                        followDocumentationLink: followDocLink
+                    }));
+                    break;
+                case 'pagination':
+                    handlers.push(new PaginationHandler_1.PaginationHandler({
+                        pagedataCallback: function (pagedata) { return console.log(pagedata); },
+                        subjectStream: client.subjectStream
+                    }));
+                    break;
+                case 'language':
+                    handlers.push(new LanguageHandler_1.LanguageHandler({
+                        languageCallback: function (languagedata) {
+                            languagedata.stream.on('data', function (data) {
+                                console.log(data);
+                            });
+                        },
+                        acceptLanguageHeader: 'en'
+                    }));
+                    break;
+                case 'versioning':
+                    var followVersionLink = false;
+                    if (args.followversionlink) {
+                        followVersionLink = true;
+                    }
+                    handlers.push(new VersioningHandler_1.VersioningHandler({
+                        versionCallback: function (versiondata) {
+                            versiondata.stream.on('data', function (data) {
+                                console.log(data);
+                            });
+                        },
+                        apiClient: client,
+                        datetime: new Date(),
+                        followLink: followVersionLink
+                    }));
+                    break;
+                case 'full_text_search':
+                    handlers.push(new FullTextSearchHandler_1.FullTextSearchHandler({
+                        callback: function (ftsdata) {
+                            ftsdata.stream.on('data', function (data) {
+                                console.log(data);
+                            });
+                        },
+                        apiClient: client,
+                        fetchQueryURL: false
+                    }));
+                    break;
+                case 'crud':
+                    handlers.push(new CRUDHandler_1.CRUDHandler({
+                        crudCallback: function (cruddata) {
+                            console.log(cruddata);
+                        }
+                    }));
+            }
         }
+    }
+    catch (error) {
+        process.stderr.write(error.message + '\n');
+        process.exit(1);
     }
     return handlers;
 }
 function processURL() {
     var URL = args._[0];
     var client = new ApiClient_1.ApiClient(null);
-    var handlers = createHandlers(client);
-    client.fetch(URL, handlers);
+    try {
+        var handlers_1 = createHandlers(client);
+        client.fetch(URL, handlers_1);
+    }
+    catch (error) {
+        process.stderr.write(error.message + '\n');
+        process.exit(1);
+    }
 }
 processURL();

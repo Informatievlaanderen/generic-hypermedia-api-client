@@ -41,83 +41,94 @@ if (args._.length < 2 || args._.length > 7 || args.h || args.help) {
 
 function createHandlers(client: ApiClient): Array<IApiHandler> {
     let handlers = [];
-    for(let i = 1 ; i < args._.length ; i++){
-        switch (args._[i]) {
-            case 'metadata':
-                let followDocLink = false;
-                if(args.followdoclink){
-                    followDocLink = true;
-                }
-                handlers.push(new MetadataHandler({
-                    metadataCallback: (metadata) => console.log(metadata),
-                    apiClient: client,
-                    followDocumentationLink: followDocLink
-                }));
-                break;
-
-            case 'pagination':
-                handlers.push(new PaginationHandler({
-                    pagedataCallback: (pagedata) => console.log(pagedata),
-                    subjectStream: client.subjectStream
-                }));
-                break;
-
-            case 'language':
-                handlers.push(new LanguageHandler({
-                    languageCallback: (languagedata) => {
-                        languagedata.stream.on('data', data => {
-                            console.log(data);
-                        });
-                    },
-                    acceptLanguageHeader: 'en'
-                }));
-                break;
-
-            case 'versioning':
-                let followVersionLink = false;
-                if(args.followversionlink){
-                    followVersionLink = true
-                }
-                handlers.push(new VersioningHandler({
-                    versionCallback: (versiondata) => {
-                        versiondata.stream.on('data', data => {
-                            console.log(data);
-                        });
-                    },
-                    apiClient: client,
-                    datetime: new Date(),
-                    followLink: followVersionLink
-                }));
-                break;
-
-            case 'full_text_search':
-                handlers.push(new FullTextSearchHandler({
-                    callback: (ftsdata) => {
-                        ftsdata.stream.on('data', data => {
-                            console.log(data);
-                        })
-                    },
-                    apiClient: client,
-                    fetchQueryURL: false
-                }));
-                break;
-
-            case 'crud':
-                handlers.push(new CRUDHandler({
-                    crudCallback: (cruddata) => {
-                        console.log(cruddata);
+    try {
+        for(let i = 1 ; i < args._.length ; i++){
+            switch (args._[i]) {
+                case 'metadata':
+                    let followDocLink = false;
+                    if(args.followdoclink){
+                        followDocLink = true;
                     }
-                }))
+                    handlers.push(new MetadataHandler({
+                        metadataCallback: (metadata) => console.log(metadata),
+                        apiClient: client,
+                        followDocumentationLink: followDocLink
+                    }));
+                    break;
+
+                case 'pagination':
+                    handlers.push(new PaginationHandler({
+                        pagedataCallback: (pagedata) => console.log(pagedata),
+                        subjectStream: client.subjectStream
+                    }));
+                    break;
+
+                case 'language':
+                    handlers.push(new LanguageHandler({
+                        languageCallback: (languagedata) => {
+                            languagedata.stream.on('data', data => {
+                                console.log(data);
+                            });
+                        },
+                        acceptLanguageHeader: 'en'
+                    }));
+                    break;
+
+                case 'versioning':
+                    let followVersionLink = false;
+                    if(args.followversionlink){
+                        followVersionLink = true
+                    }
+                    handlers.push(new VersioningHandler({
+                        versionCallback: (versiondata) => {
+                            versiondata.stream.on('data', data => {
+                                console.log(data);
+                            });
+                        },
+                        apiClient: client,
+                        datetime: new Date(),
+                        followLink: followVersionLink
+                    }));
+                    break;
+
+                case 'full_text_search':
+                    handlers.push(new FullTextSearchHandler({
+                        callback: (ftsdata) => {
+                            ftsdata.stream.on('data', data => {
+                                console.log(data);
+                            })
+                        },
+                        apiClient: client,
+                        fetchQueryURL: false
+                    }));
+                    break;
+
+                case 'crud':
+                    handlers.push(new CRUDHandler({
+                        crudCallback: (cruddata) => {
+                            console.log(cruddata);
+                        }
+                    }))
+            }
         }
+    } catch (error) {
+        process.stderr.write(error.message + '\n');
+        process.exit(1);
     }
+
     return handlers;
 }
 
 function processURL(): void {
     const URL = args._[0];
     const client = new ApiClient(null);
-    let handlers = createHandlers(client);
-    client.fetch(URL, handlers);
+    try {
+        let handlers = createHandlers(client);
+        client.fetch(URL, handlers);
+    } catch (error) {
+        process.stderr.write(error.message + '\n');
+        process.exit(1);
+    }
 }
 
 processURL();
