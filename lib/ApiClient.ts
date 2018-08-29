@@ -39,7 +39,8 @@ export class ApiClient {
             this.parser = null;
         }
         this.subjectStream = new stream.Readable({objectMode: true});
-        this.subjectStream._read = () => {};
+        this.subjectStream._read = () => {
+        };
 
         this.subjectStream.on('data', (object) => {
             object = JSON.parse(object.toString());
@@ -59,11 +60,11 @@ export class ApiClient {
         const languageHandler = this.getHandler('LanguageHandler', handlers) as LanguageHandler;
         const versioningHandler = this.getHandler('VersioningHandler', handlers) as VersioningHandler;
 
-        if(languageHandler){
+        if (languageHandler) {
             headers.append('Accept-Language', languageHandler.acceptLanguageHeader);
         }
 
-        if(versioningHandler){
+        if (versioningHandler) {
             headers.append('Accept-Datetime', versioningHandler.datetime.toString());
         }
 
@@ -115,18 +116,18 @@ export class ApiClient {
                         //Full Text Search Handler
                         const fullTextSearchHandler = this.getHandler('FullTextSearchHandler', handlers) as FullTextSearchHandler;
                         let querystring = '';
-                        if(fullTextSearchHandler && !fullTextSearchHandler.parameterURLFetched){
-                            if(contentType.toLocaleLowerCase() === 'application/json' && fullTextSearchHandler.queryValues.length > 1){
-                                if(!fullTextSearchHandler.queryKeys){
+                        if (fullTextSearchHandler && !fullTextSearchHandler.parameterURLFetched) {
+                            if (contentType.toLocaleLowerCase() === 'application/json' && fullTextSearchHandler.queryValues.length > 1) {
+                                if (!fullTextSearchHandler.queryKeys) {
                                     throw new Error('(FullTextSearchHandler): please give queryKeys in the constructor');
-                                } else if(fullTextSearchHandler.queryKeys.length === fullTextSearchHandler.queryValues.length){
-                                    for(let index in fullTextSearchHandler.queryValues){
+                                } else if (fullTextSearchHandler.queryKeys.length === fullTextSearchHandler.queryValues.length) {
+                                    for (let index in fullTextSearchHandler.queryValues) {
                                         querystring += 'filter[' + fullTextSearchHandler.queryKeys[index] + ']=' + fullTextSearchHandler.queryValues[index] + '&';
                                     }
                                 } else {
                                     throw new Error('(FullTextSearchHandler): there are not as many keys as values');
                                 }
-                            } else if(contentType.toLocaleLowerCase() === 'application/json' && fullTextSearchHandler.queryValues.length > 0){
+                            } else if (contentType.toLocaleLowerCase() === 'application/json' && fullTextSearchHandler.queryValues.length > 0) {
                                 querystring += 'filter=' + fullTextSearchHandler.queryValues[0];
                             } else {
                                 if (fullTextSearchHandler.queryValues.length !== fullTextSearchHandler.queryValues.length) {
@@ -145,20 +146,20 @@ export class ApiClient {
                             querystring = '?' + querystring;
                             const queryURL = response.url + querystring;
 
-                            if(fullTextSearchHandler.fetchQueryURL){
+                            if (fullTextSearchHandler.fetchQueryURL) {
                                 this.fetch(queryURL, [fullTextSearchHandler]);
                                 fullTextSearchHandler.parameterURLFetched = true;
-                            } else if(querystring.indexOf('?') !== querystring.length-1) {
+                            } else if (querystring.indexOf('?') !== querystring.length - 1) {
                                 //We make sure that only correct queryURLs are returned
                                 fullTextSearchHandler.quadStream.unshift(queryURL);
                             }
-                        } else if(fullTextSearchHandler && fullTextSearchHandler.parameterURLFetched){
+                        } else if (fullTextSearchHandler && fullTextSearchHandler.parameterURLFetched) {
                             this.streamBodyToClient(fullTextSearchHandler.quadStream, contentType, response);
                         }
 
                         //VersioningHandler
                         const versioningHandler = this.getHandler('VersioningHandler', handlers) as VersioningHandler;
-                        if(versioningHandler){
+                        if (versioningHandler) {
                             //If the body is HTML or some type that can't be parsed, we have to stream the body to the client
                             this.streamBodyToClient(versioningHandler.stream, contentType, response);
                         }
@@ -170,13 +171,16 @@ export class ApiClient {
             } catch (e) {
                 console.error('Error: ' + e.message);
             }
+        }).catch( (error) => {
+            console.error('Error: ' + error.message);
         })
+
     }
 
     private getHandler(name: string, handlers: IApiHandler[]): IApiHandler {
         let handler = null;
-        for(let index in handlers){
-            if(handlers[index].constructor.name === name){
+        for (let index in handlers) {
+            if (handlers[index].constructor.name === name) {
                 handler = handlers[index];
             }
         }
@@ -184,12 +188,12 @@ export class ApiClient {
     }
 
     private streamBodyToClient(stream: Readable, contentType: string, response: Response): void {
-        if(contentType.toLocaleLowerCase() === 'application/json'){
-            response.json().then( data => {
+        if (contentType.toLocaleLowerCase() === 'application/json') {
+            response.json().then(data => {
                 stream.unshift(data);
             })
         } else {
-            response.text().then( data => {
+            response.text().then(data => {
                 stream.unshift(data);
             })
         }
