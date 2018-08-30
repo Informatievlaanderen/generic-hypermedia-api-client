@@ -76,7 +76,7 @@ Dit commando zal de URL _http://tw06v036.ugent.be/api/language_ fetchen waarbij 
 
 ### Endpoints
 
-- Zie [Generic-Hypermedia-API-Client-testserver](https://github.com/Informatievlaanderen/generic-hypermedia-api-client-testserver/blob/master/README.md)
+- Zie [Generic-Hypermedia-API-Client-testserver](https://github.com/Informatievlaanderen/generic-hypermedia-api-client-testserver/blob/master/README.md#endpoints)
 
 ## Testen 
 
