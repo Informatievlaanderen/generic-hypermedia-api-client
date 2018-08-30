@@ -62,7 +62,14 @@ Dit commando zal de URL _http://tw06v036.ugent.be/api/all_ fetchen en daarna zul
 Dit commando zal de URL _http://tw06v036.ugent.be/api/language_ fetchen waarbij de `Accept-Language` header meegestuurd wordt met de waarde `nl,en;q=0.9`. De ontvangen data wordt door de LanguageHandler gestuurd.
 
 ### Endpoints
-* `/api` = entryp 
+* `/api` = entrypoint.
+* `/api/documentation` = dummydata voor MetadataHandler.
+* `/api/pagination` = dummydata voor PaginationHandler.
+* `/api/language` = dummydata voor LanguageHandler.
+* `/api/versioning` = dummydata voor VersioningHandler
+* `/api/fullTextSearch` = dummydata voor FullTextSearchHandler
+* `/api/crud/1` = dummydata voor CRUDHandler
+* `/api/all` = dummydata voor MetadataHandler, PaginationHandler, LanguageHandler en VersioningHandler. Dit endpoint kan gebruikt worden om _meerdere_ bouwblokken samen te testen.
 
 ## Testen
 
