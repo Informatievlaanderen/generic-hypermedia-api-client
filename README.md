@@ -71,7 +71,9 @@ Dit commando zal de URL _http://tw06v036.ugent.be/api/language_ fetchen waarbij 
 * `/api/crud/1` = dummydata voor CRUDHandler
 * `/api/all` = dummydata voor MetadataHandler, PaginationHandler, LanguageHandler en VersioningHandler. Dit endpoint kan gebruikt worden om _meerdere_ bouwblokken samen te testen.
 
-## Testen
+## Testen - TODO (install)
+
+
 
 De eenvoudigste manier is om deze repository te clonen naar de eigen computer. In het bestand **index.ts** kunnen de verschillende _code snippets_ (zie onder) geplaatst worden om deze te testen. De eerste keer na het clonen moet het commando `npm run build` uitgevoerd worden. Daarna en alle volgende keren volstaat het om `node index.js` uit te voeren.
 
