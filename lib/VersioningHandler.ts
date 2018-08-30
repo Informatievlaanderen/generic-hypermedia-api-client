@@ -25,6 +25,7 @@ export class VersioningHandler implements IApiHandler {
     private followLink: boolean;
 
     private versionURL: string;
+    private versionURLFetched: boolean;
 
     private myQuads: {[key: string]: Array<object> } = {};   //Key will be graph ID
     private versionFound: boolean;
@@ -42,6 +43,8 @@ export class VersioningHandler implements IApiHandler {
             this.datetime = args.datetime;
             this.followLink = args.followLink;
 
+            this.versionURLFetched = false;
+
             this.versionFound = false;
             this.stream = new Readable({objectMode: true});
             this.stream._read = () => {
@@ -53,28 +56,31 @@ export class VersioningHandler implements IApiHandler {
 
     onFetch(response: Response) {
 
-        //If there's a memento datetime, the Link header will contain an URL with rel='timegate'
-        if(response.headers.has('memento-datetime')){
-            const datetime = response.headers.get('memento-datetime');
-            const links = response.headers.has('link') && parseLink(response.headers.get('link'));
-            if(links && links.timegate){
-                this.versionURL = links.timegate.url;
-            }
-        } else if(response.headers.has('link')){
-            //There's no memento-datetime, Link header could contain an URL with rel='alternate'
-            const links = parseLink(response.headers.get('link'));
-            if(links && links.alternate){
-                this.versionURL = links.alternate.url;
-            }
-        } else {
-            throw new Error('(VersioningHandler) : no versioning for this URL');
-        }
-
-        if(this.versionURL){
-            if(this.followLink){
-                this.apiClient.fetch(this.versionURL, [this]);
+        if(!this.versionURLFetched){
+            //If there's a memento datetime, the Link header will contain an URL with rel='timegate'
+            if(response.headers.has('memento-datetime')){
+                const datetime = response.headers.get('memento-datetime');
+                const links = response.headers.has('link') && parseLink(response.headers.get('link'));
+                if(links && links.timegate){
+                    this.versionURL = links.timegate.url;
+                }
+            } else if(response.headers.has('link')){
+                //There's no memento-datetime, Link header could contain an URL with rel='alternate'
+                const links = parseLink(response.headers.get('link'));
+                if(links && links.alternate){
+                    this.versionURL = links.alternate.url;
+                }
             } else {
-                this.stream.unshift(this.versionURL);
+                throw new Error('(VersioningHandler) : no versioning for this URL');
+            }
+
+            if(this.versionURL){
+                if(this.followLink){
+                    this.apiClient.fetch(this.versionURL, [this]);
+                    this.versionURLFetched = true;
+                } else {
+                    this.stream.unshift(this.versionURL);
+                }
             }
         }
     }
@@ -93,34 +99,26 @@ export class VersioningHandler implements IApiHandler {
             });
         } else{
             //The quad has been found and the graphID is kwown. So start streaming the triples.
-            if(this.myQuads[this.graphID].length > 0){
+            if(this.myQuads[this.graphID] && this.myQuads[this.graphID].length > 0){
                 for(let index in this.myQuads[this.graphID]){
                     const triple = this.myQuads[this.graphID][index];
-                    this.stream.unshift(JSON.stringify(triple));
+                    this.stream.unshift(triple);
                 }
                 delete this.myQuads[this.graphID];
             }
 
-            this.checkPredicates(quad, (data) => {
-                if(Object.keys(data).length > 0){
-                    this.stream.unshift(data);
-                }
-            })
+            if(RdfTerm.termToString(quad.graph) === this.graphID){
+                this.stream.unshift(quad);
+            }
         }
     }
 
     checkPredicates(quad: RDF.Quad, dataCallback: (data) => void){
         let triple = {};
 
-        if(!this.versionFound){
-            if(quad.predicate.equals(this.DATETIME) || quad.predicate.equals(this.VERSION)){
-                this.graphID = RdfTerm.termToString(quad.subject);
-                this.versionFound = true;
-            } else {
-                triple['subject'] = quad.subject;
-                triple['predicate'] = quad.predicate;
-                triple['object'] = quad.object;
-            }
+        if(quad.predicate.equals(this.DATETIME) || quad.predicate.equals(this.VERSION)){
+            this.graphID = RdfTerm.termToString(quad.subject);
+            this.versionFound = true;
         } else {
             triple['subject'] = quad.subject;
             triple['predicate'] = quad.predicate;
@@ -131,7 +129,7 @@ export class VersioningHandler implements IApiHandler {
     }
 
     onEnd() {
-        this.stream.unshift(null);
+        //this.stream.unshift(null);
     }
 
 }
