@@ -13,7 +13,7 @@ var args = minimist(process.argv);
 var handlers = [];
 if (args._.length < 2 || args._.length > 7 || args.h || args.help) {
     // Print command usage
-    process.stderr.write("\n    generic-hypermedia-api-client requires an URL and one or more handlers\n    \n    Usage:    \n    generic-hypermedia-api-client http://example.org handler1 handler2\n    \n    Handlers:\n        * metadata\n        * pagination\n        * language\n        * versioning\n        * full_text_search\n        * crud\n    \n    Options:\n        --followdoclink         follow the documentation link in the MetadataHandler\n        --followversionlink     follow the versioned URL in the VersionHandler\n        --help                  print this help message\n");
+    process.stderr.write("\n    generic-hypermedia-api-client requires an URL and one or more handlers\n    \n    Usage:    \n    generic-hypermedia-api-client http://example.org handler1 handler2\n    \n    Handlers:\n        * metadata\n        * pagination\n        * language\n        * versioning\n        * full_text_search\n        * crud\n    \n    Options:        \n        --followdoclink         follow the documentation link in the MetadataHandler\n        -l                      expects value of 'Accept-Language' header of LanguageHandler\n        --queryurl              query the template URL with parameters filled in\n        -values                 values to be filled in as values in the templateURL for the FullTextSearchHandler. Multiple values between \"\" and separated by a space\n        -keys                   keys to be filled in as keys in the templateURL for the FullTextSearchHandler. Multiple keys between \"\" and separated by a space\n        --followversionlink     follow the versioned URL in the VersionHandler\n        --help                  print this help message\n");
     process.exit(1);
 }
 function createHandlers(client) {
@@ -39,13 +39,17 @@ function createHandlers(client) {
                     }));
                     break;
                 case 'language':
+                    var languageHeader = 'nl';
+                    if (args.l) {
+                        languageHeader = args.l;
+                    }
                     handlers.push(new LanguageHandler_1.LanguageHandler({
                         languageCallback: function (languagedata) {
                             languagedata.stream.on('data', function (data) {
                                 console.log(data);
                             });
                         },
-                        acceptLanguageHeader: 'en'
+                        acceptLanguageHeader: languageHeader
                     }));
                     break;
                 case 'versioning':
@@ -65,6 +69,18 @@ function createHandlers(client) {
                     }));
                     break;
                 case 'full_text_search':
+                    var fetch_1 = false;
+                    if (args.queryurl) {
+                        fetch_1 = true;
+                    }
+                    var values = [];
+                    var keys = [];
+                    if (args.values) {
+                        values = args.values.split(' ');
+                    }
+                    if (args.keys) {
+                        keys = args.keys.split(' ');
+                    }
                     handlers.push(new FullTextSearchHandler_1.FullTextSearchHandler({
                         callback: function (ftsdata) {
                             ftsdata.stream.on('data', function (data) {
@@ -72,7 +88,9 @@ function createHandlers(client) {
                             });
                         },
                         apiClient: client,
-                        fetchQueryURL: false
+                        fetchQueryURL: fetch_1,
+                        queryValues: values,
+                        queryKeys: keys
                     }));
                     break;
                 case 'crud':

@@ -31,8 +31,12 @@ if (args._.length < 2 || args._.length > 7 || args.h || args.help) {
         * full_text_search
         * crud
     
-    Options:
+    Options:        
         --followdoclink         follow the documentation link in the MetadataHandler
+        -l                      expects value of 'Accept-Language' header of LanguageHandler
+        --queryurl              query the template URL with parameters filled in
+        -values                 values to be filled in as values in the templateURL for the FullTextSearchHandler. Multiple values between "" and separated by a space
+        -keys                   keys to be filled in as keys in the templateURL for the FullTextSearchHandler. Multiple keys between "" and separated by a space
         --followversionlink     follow the versioned URL in the VersionHandler
         --help                  print this help message
 `);
@@ -64,13 +68,17 @@ function createHandlers(client: ApiClient): Array<IApiHandler> {
                     break;
 
                 case 'language':
+                    let languageHeader = 'nl';
+                    if(args.l){
+                        languageHeader = args.l;
+                    }
                     handlers.push(new LanguageHandler({
                         languageCallback: (languagedata) => {
                             languagedata.stream.on('data', data => {
                                 console.log(data);
                             });
                         },
-                        acceptLanguageHeader: 'en'
+                        acceptLanguageHeader: languageHeader
                     }));
                     break;
 
@@ -92,6 +100,18 @@ function createHandlers(client: ApiClient): Array<IApiHandler> {
                     break;
 
                 case 'full_text_search':
+                    let fetch = false;
+                    if(args.queryurl){
+                        fetch = true;
+                    }
+                    let values = [];
+                    let keys = [];
+                    if(args.values){
+                        values = args.values.split(' ');
+                    }
+                    if(args.keys){
+                        keys = args.keys.split(' ');
+                    }
                     handlers.push(new FullTextSearchHandler({
                         callback: (ftsdata) => {
                             ftsdata.stream.on('data', data => {
@@ -99,7 +119,9 @@ function createHandlers(client: ApiClient): Array<IApiHandler> {
                             })
                         },
                         apiClient: client,
-                        fetchQueryURL: false
+                        fetchQueryURL: fetch,
+                        queryValues: values,
+                        queryKeys: keys
                     }));
                     break;
 
