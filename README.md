@@ -20,7 +20,7 @@ Om gebruik te kunnen maken is een [ApiClient](https://github.com/ddvlanck/Linked
 
 ## Installatie
 
-Als eerste dient de repository **gecloned** te worden. Vervolgens moet naar de folder genavigeerd worden en de benodige _node_modules_ geïnstalleerd worden:
+Als eerste dient de repository **gecloned** te worden. Vervolgens moet naar de folder genavigeerd worden en de benodigde _node_modules_ geïnstalleerd worden:
 ```
 > git clone https://github.com/Informatievlaanderen/generic-hypermedia-api-client
 > cd generic-hypermedia-api-client
