@@ -15,7 +15,54 @@ De bouwblokken die reeds geïmplementeerd zijn:
 * [Full Text Search](https://github.com/ddvlanck/generic-hypermedia-api-client/wiki/FullTextSearchHandler)
 * [CRUD](https://github.com/ddvlanck/generic-hypermedia-api-client/wiki/CRUDHandler)
 
-Om gebruik te kunnen maken is een [ApiClient](https://github.com/ddvlanck/LinkedData/wiki/ApiClient) nodig 
+Om gebruik te kunnen maken is een [ApiClient](https://github.com/ddvlanck/LinkedData/wiki/ApiClient) nodig
+
+## Bin usage
+
+Na installatie van het project via `npm install generic-hypermedia-api-client` kan de package eenvoudig getest worden via een bin script. Hiervoor dient de gebruiker het volgende commando uit te voeren:
+```
+> generic-hypermedia-api-client URL handler_1 handler_2 ...
+```
+
+### Handlers
+
+De handler werden gemapt op hun naam zonder de suffix _Handler_. Per handler kunnen ook verschillende opties meegegeven worden.
+
+#### metadata (MetadataHandler)
+* `--followdoclink` : volg een gevonden api documentatie link
+
+#### pagination (PaginationHandler)
+Geen opties mogelijk
+
+#### language (LanguageHandler)
+* `-l` : verwacht een de **waarde** voor een `Accept-Language` header
+
+#### versioning (VersioningHandler)
+* `--followversionlink` : volg de geversioneerde URL als deze gevonden wordt
+
+#### full_text_search (FullTextSearchHandler)
+* `--queryurl`: fetch de template URL met ingevulde parameters
+* `-values`   : waarden om als values in te vullen in de template URL
+* `-keys`     : waarden om als keys in te vullen in de template URL
+
+#### crud (CRUDHandler)
+Geen opties mogelijk
+
+### Voorbeeld
+
+```
+> generic-hypermedia-api-client http://tw06v036.ugent.be/api/all metadata pagination
+```
+Dit commando zal de URL _http://tw06v036.ugent.be/api/all_ fetchen en daarna zullen de _MetadataHandler_ en _PaginationHandler_ de data verwerken.
+
+```
+> generic-hypermedia-api-client http://tw06v036.ugent.be/api/language language -l nl,en;q=0.9
+```
+
+Dit commando zal de URL _http://tw06v036.ugent.be/api/language_ fetchen waarbij de `Accept-Language` header meegestuurd wordt met de waarde `nl,en;q=0.9`. De ontvangen data wordt door de LanguageHandler gestuurd.
+
+### Endpoints
+* `/api` = entryp 
 
 ## Testen
 
