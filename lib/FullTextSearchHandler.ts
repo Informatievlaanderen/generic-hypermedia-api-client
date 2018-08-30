@@ -42,16 +42,18 @@ export class FullTextSearchHandler implements IApiHandler {
 
     constructor(args: IFullTextSearchHandlerArgs) {
         if(Object.keys(args).length < 3){
-            throw new Error('(FullTextSearchHandler): constructor expects at least 2 arguments');
+            throw new Error('(FullTextSearchHandler): constructor expects at least 3 arguments');
         } else {
             this.callback = args.callback;
             this.apiClient = args.apiClient;
             this.fetchQueryURL = args.fetchQueryURL;
+
             if(this.fetchQueryURL){
-                if(!args.queryValues){
+                if(args.queryValues.length === 0){
                     throw new Error('(FullTextSearchHandler): in order to fetch the template URL, you need to give query values');
+                } else {
+                    this.queryValues = args.queryValues;
                 }
-                this.queryValues = args.queryValues;
             }
             this.queryKeys = args.queryKeys ? args.queryKeys : [];
 
@@ -189,7 +191,8 @@ export class FullTextSearchHandler implements IApiHandler {
                     let object = {}
                     Object.keys(this.templateKeys).forEach((index) => {
                         object[this.templateKeys[index]] = this.queryValues[index];
-                    })
+                    });
+
                     const queryURL = parsedURL.expand(object);
 
                     this.apiClient.fetch(queryURL, [this]);

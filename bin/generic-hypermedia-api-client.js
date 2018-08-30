@@ -13,7 +13,7 @@ var args = minimist(process.argv);
 var handlers = [];
 if (args._.length < 2 || args._.length > 7 || args.h || args.help) {
     // Print command usage
-    process.stderr.write("\n    generic-hypermedia-api-client requires an URL and one or more handlers\n    \n    Usage:    \n    generic-hypermedia-api-client http://example.org handler1 handler2\n    \n    Handlers:\n        * metadata\n        * pagination\n        * language\n        * versioning\n        * full_text_search\n        * crud\n    \n    Options:        \n        --followdoclink         follow the documentation link in the MetadataHandler\n        -l                      expects value of 'Accept-Language' header of LanguageHandler\n        --queryurl              query the template URL with parameters filled in\n        -values                 values to be filled in as values in the templateURL for the FullTextSearchHandler. Multiple values between \"\" and separated by a space\n        -keys                   keys to be filled in as keys in the templateURL for the FullTextSearchHandler. Multiple keys between \"\" and separated by a space\n        --followversionlink     follow the versioned URL in the VersionHandler\n        --help                  print this help message\n");
+    process.stderr.write("\n    generic-hypermedia-api-client requires an URL and one or more handlers\n    \n    Usage:    \n    generic-hypermedia-api-client http://example.org handler1 handler2\n    \n    Handlers:\n        * metadata\n        * pagination\n        * language\n        * versioning\n        * full_text_search\n        * crud\n    \n    Options:\n        -l                      [LanguageHandler]: expects value of the 'Accept-Language' header\n        -v                      [FullTextSearchHandler]: value(s) to be filled in as value(s) in the template URL. Multiple values between \"\" and separated by a space\n        -k                      [FullTextSearchHandler]: key(s) to be filled in as key(s) in the template URL. Multiple keys between \"\" and separated by a space\n        --followdoclink         [MetadataHandler]: follow the documentation link if found\n        --queryurl              [FullTextSearchHandler]: query the template URL with the query values (and keys)\n        --followversionlink     [VersionHandler]: follow the versioned URL\n        --help                  print this help message\n    ");
     process.exit(1);
 }
 function createHandlers(client) {
@@ -70,15 +70,15 @@ function createHandlers(client) {
                     break;
                 case 'full_text_search':
                     var fetch_1 = false;
+                    var values = [];
+                    var keys = [];
                     if (args.queryurl) {
                         fetch_1 = true;
                     }
-                    var values = [];
-                    var keys = [];
-                    if (args.values) {
-                        values = args.values.split(' ');
+                    if (args.v) {
+                        values = args.v.split(' ');
                     }
-                    if (args.keys) {
+                    if (args.k) {
                         keys = args.keys.split(' ');
                     }
                     handlers.push(new FullTextSearchHandler_1.FullTextSearchHandler({

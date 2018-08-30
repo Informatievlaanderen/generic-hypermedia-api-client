@@ -31,15 +31,15 @@ if (args._.length < 2 || args._.length > 7 || args.h || args.help) {
         * full_text_search
         * crud
     
-    Options:        
-        --followdoclink         follow the documentation link in the MetadataHandler
-        -l                      expects value of 'Accept-Language' header of LanguageHandler
-        --queryurl              query the template URL with parameters filled in
-        -values                 values to be filled in as values in the templateURL for the FullTextSearchHandler. Multiple values between "" and separated by a space
-        -keys                   keys to be filled in as keys in the templateURL for the FullTextSearchHandler. Multiple keys between "" and separated by a space
-        --followversionlink     follow the versioned URL in the VersionHandler
+    Options:
+        -l                      [LanguageHandler]: expects value of the 'Accept-Language' header
+        -v                      [FullTextSearchHandler]: value(s) to be filled in as value(s) in the template URL. Multiple values between "" and separated by a space
+        -k                      [FullTextSearchHandler]: key(s) to be filled in as key(s) in the template URL. Multiple keys between "" and separated by a space
+        --followdoclink         [MetadataHandler]: follow the documentation link if found
+        --queryurl              [FullTextSearchHandler]: query the template URL with the query values (and keys)
+        --followversionlink     [VersionHandler]: follow the versioned URL
         --help                  print this help message
-`);
+    `);
     process.exit(1);
 }
 
@@ -101,15 +101,16 @@ function createHandlers(client: ApiClient): Array<IApiHandler> {
 
                 case 'full_text_search':
                     let fetch = false;
+                    let values = [];
+                    let keys = [];
                     if(args.queryurl){
                         fetch = true;
                     }
-                    let values = [];
-                    let keys = [];
-                    if(args.values){
-                        values = args.values.split(' ');
+                    if(args.v){
+                        values = args.v.split(' ');
                     }
-                    if(args.keys){
+
+                    if(args.k){
                         keys = args.keys.split(' ');
                     }
                     handlers.push(new FullTextSearchHandler({
