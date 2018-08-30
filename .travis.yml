@@ -8,8 +8,14 @@ script:
 - npm run build
 - npm run lint
 - npm test
-after_success:
-- npm run coveralls
 cache:
   directories:
   - node_modules
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    packages:
+    - g++-4.9
+install:
+- CC=gcc-4.9 CXX=g++-4.9 npm install
