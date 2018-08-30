@@ -1,4 +1,5 @@
 # Generieke Hypermedia API client
+[![Build Status](https://travis-ci.com/ddvlanck/generic-hypermedia-api-client.svg?branch=master)](https://travis-ci.com/ddvlanck/generic-hypermedia-api-client)
 
 Er wordt gebouwd aan een specificatie van generieke bouwblokken voor API's in Vlaanderen. Dit is deel van de onderzoeksgroep [Werkgroep datastandaarden van het Stuurorgaan](https://overheid.vlaanderen.be/stuurorgaan-werkgroepen).
 
