@@ -16,7 +16,7 @@ De bouwblokken die reeds geïmplementeerd zijn:
 * [Full Text Search](https://github.com/ddvlanck/generic-hypermedia-api-client/wiki/FullTextSearchHandler)
 * [CRUD](https://github.com/ddvlanck/generic-hypermedia-api-client/wiki/CRUDHandler)
 
-Om gebruik te kunnen maken is een [ApiClient](https://github.com/ddvlanck/LinkedData/wiki/ApiClient) nodig.
+Om gebruik te kunnen maken van deze bouwblokken is een [ApiClient](https://github.com/ddvlanck/LinkedData/wiki/ApiClient) nodig.
 
 ## Installatie
 
@@ -82,7 +82,7 @@ Dit commando zal de URL _http://tw06v036.ugent.be/api/language_ fetchen waarbij 
 
 Om te testen kan gebruik gemaakt worden van de [Generieke-Hypermedia-API-Client-Testserver](https://github.com/ddvlanck/generic-hypermedia-api-client-testserver). Dit is een server die enkel data teruggeeft en is te bereiken op `http://tw06v036.ugent.be/api`.
 
-Voorbeeld data voor metadataHandler:
+Voorbeeld van data voor de metadataHandler:
 
 ```
 {
@@ -104,9 +104,11 @@ Voorbeeld data voor metadataHandler:
 };
 ```
 
-Meer voorbeelden kunnen gevonden worden bij de beschrijving van de bouwblokken in de repository van de [Generieke Hypermedia API](https://github.com/Informatievlaanderen/generieke-hypermedia-api).
+Meer voorbeelden van data kunnen gevonden worden bij de beschrijving van de bouwblokken in de repository van de [Generieke Hypermedia API](https://github.com/Informatievlaanderen/generieke-hypermedia-api).
 
 ## Testen van de bouwblokken - Voorbeelden
+
+Na installatie van de (npm-)package kunnen de verschillende handlers op volgende manier getest worden:
 
 * MetadataHandler 
 
