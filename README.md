@@ -16,12 +16,24 @@ De bouwblokken die reeds geïmplementeerd zijn:
 * [Full Text Search](https://github.com/ddvlanck/generic-hypermedia-api-client/wiki/FullTextSearchHandler)
 * [CRUD](https://github.com/ddvlanck/generic-hypermedia-api-client/wiki/CRUDHandler)
 
-Om gebruik te kunnen maken is een [ApiClient](https://github.com/ddvlanck/LinkedData/wiki/ApiClient) nodig
+Om gebruik te kunnen maken is een [ApiClient](https://github.com/ddvlanck/LinkedData/wiki/ApiClient) nodig.
+
+## Installatie
+
+Als eerste dient de repository **gecloned** te worden. Vervolgens moet naar de folder genavigeerd worden en de benodigde _node_modules_ geïnstalleerd worden:
+```
+> git clone https://github.com/Informatievlaanderen/generic-hypermedia-api-client
+> cd generic-hypermedia-api-client
+> npm install
+```
+
+Om gebruik te maken van de module zie de volgende sectie.
 
 ## Bin usage
 
-Na installatie van het project via `npm install generic-hypermedia-api-client` kan de package eenvoudig getest worden via een bin script. Hiervoor dient de gebruiker het volgende commando uit te voeren:
+Na installatie van het project kan de package eenvoudig getest worden via een bin script. Hiervoor dient de gebruiker het volgende commando uit te voeren:
 ```
+> (navigeer eerst naar de /bin folder)
 > generic-hypermedia-api-client URL handler_1 handler_2 ...
 ```
 
@@ -43,8 +55,8 @@ Geen opties mogelijk
 
 #### full_text_search (FullTextSearchHandler)
 * `--queryurl`: fetch de template URL met ingevulde parameters
-* `-values`   : waarden om als values in te vullen in de template URL
-* `-keys`     : waarden om als keys in te vullen in de template URL
+* `-v`   : waarden om als values in te vullen in de template URL
+* `-k`     : waarden om als keys in te vullen in de template URL
 
 #### crud (CRUDHandler)
 Geen opties mogelijk
@@ -63,20 +75,10 @@ Dit commando zal de URL _http://tw06v036.ugent.be/api/all_ fetchen en daarna zul
 Dit commando zal de URL _http://tw06v036.ugent.be/api/language_ fetchen waarbij de `Accept-Language` header meegestuurd wordt met de waarde `nl,en;q=0.9`. De ontvangen data wordt door de LanguageHandler gestuurd.
 
 ### Endpoints
-* `/api` = entrypoint.
-* `/api/documentation` = dummydata voor MetadataHandler.
-* `/api/pagination` = dummydata voor PaginationHandler.
-* `/api/language` = dummydata voor LanguageHandler.
-* `/api/versioning` = dummydata voor VersioningHandler
-* `/api/fullTextSearch` = dummydata voor FullTextSearchHandler
-* `/api/crud/1` = dummydata voor CRUDHandler
-* `/api/all` = dummydata voor MetadataHandler, PaginationHandler, LanguageHandler en VersioningHandler. Dit endpoint kan gebruikt worden om _meerdere_ bouwblokken samen te testen.
 
-## Testen - TODO (install)
+- Zie [Generic-Hypermedia-API-Client-testserver](https://github.com/Informatievlaanderen/generic-hypermedia-api-client-testserver/blob/master/README.md#endpoints)
 
-
-
-De eenvoudigste manier is om deze repository te clonen naar de eigen computer. In het bestand **index.ts** kunnen de verschillende _code snippets_ (zie onder) geplaatst worden om deze te testen. De eerste keer na het clonen moet het commando `npm run build` uitgevoerd worden. Daarna en alle volgende keren volstaat het om `node index.js` uit te voeren.
+## Testen 
 
 Om te testen kan gebruik gemaakt worden van de [Generieke-Hypermedia-API-Client-Testserver](https://github.com/ddvlanck/generic-hypermedia-api-client-testserver). Dit is een server die enkel data teruggeeft en is te bereiken op `http://tw06v036.ugent.be/api`.
 
