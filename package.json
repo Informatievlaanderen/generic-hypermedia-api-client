@@ -19,10 +19,10 @@
   "author": "Dwight Van Lancker",
   "license": "MIT",
   "repository": {
-    "type" : "git",
-    "url" : "git+https://github.com/Informatievlaanderen/generic-hypermedia-api-client.git"
+    "type": "git",
+    "url": "git+https://github.com/Informatievlaanderen/generic-hypermedia-api-client.git"
   },
-  "bugs" : {
+  "bugs": {
     "url" : "https://github.com/Informatievlaanderen/generic-hypermedia-api-client/issues"
   },
   "jest": {
@@ -51,7 +51,7 @@
     "test-watch": "jest ${1} --watch",
     "coveralls": "jest --coverage && cat ./coverage/lcov.info | coveralls",
     "lint": "tslint index.ts lib/**/*.ts test/**/*.ts --exclude '**/*.d.ts'",
-    "build": "tsc",
+    "build": "tsc | webpack",
     "validate": "npm ls",
     "prepare": "npm run build"
   },
@@ -66,6 +66,7 @@
   "dependencies": {
     "@rdfjs/data-model": "^1.1.0",
     "content-type": "^1.0.4",
+    "es6-promise": "^4.2.5",
     "isomorphic-fetch": "^2.2.1",
     "minimist": "^1.2.0",
     "parse-link-header": "^1.0.1",
