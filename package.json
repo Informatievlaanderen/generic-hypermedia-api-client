@@ -66,6 +66,7 @@
   "dependencies": {
     "@rdfjs/data-model": "^1.1.0",
     "content-type": "^1.0.4",
+    "es6-promise": "^4.2.5",
     "isomorphic-fetch": "^2.2.1",
     "minimist": "^1.2.0",
     "parse-link-header": "^1.0.1",
