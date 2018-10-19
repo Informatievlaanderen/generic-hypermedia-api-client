@@ -36,6 +36,41 @@ Na installatie van het project kan de package eenvoudig getest worden via een bi
 > (navigeer eerst naar de /bin folder)
 > generic-hypermedia-api-client URL handler_1 handler_2 ...
 ```
+## Browser usage
+
+Na installatie van het project kan de package gebouwd worden voor gebruik in een browser-omgeving. Hiervoor dient de gebruiker het volgende commando uit te voeren:
+```
+> npm run build
+```
+
+Vervolgens kan het bestand `dist/main.js` hergebruikt worden in een webapplicatie via de script-tag:
+```
+<script src="./dist/main.js"></script>
+<script>
+function getPaginationControls(_url) {
+  return new Promise(resolve => {
+    let client = new window.ghaclient.ApiClient(null);
+    const paginationHandler = new window.ghaclient.PaginationHandler({
+      pagedataCallback: (pagedata) => resolve(pagedata),
+      subjectStream: client.subjectStream
+    });
+    client.fetch(_url, [paginationHandler]);
+  });
+}
+let main = async function () {
+  let paginationControls = await getPaginationControls('http://tw06v036.ugent.be/api/pagination');
+  console.log(paginationControls);
+}
+try {
+  main();
+} catch (e) {
+  console.error(e);
+}
+</script>
+```
+
+Of gebruik een [CDN](https://nl.wikipedia.org/wiki/Content_delivery_network) om direct aan de slag te kunnen:
+`<script src="https://cdn.jsdelivr.net/npm/generic-hypermedia-api-client@0.0.1/dist/main.js"></script>`
 
 ### Handlers
 
