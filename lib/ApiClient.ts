@@ -5,7 +5,9 @@ import {Readable} from "stream";
 import {FullTextSearchHandler} from "./FullTextSearchHandler";
 import {type} from "os";
 
+const fetch = require('node-fetch').default
 require('es6-promise').polyfill();
+const stringToStream = require('string-to-stream');
 require('isomorphic-fetch');
 const RDF = require('rdf-ext');
 const formats = require('rdf-formats-common')(RDF);
@@ -69,7 +71,7 @@ export class ApiClient {
         }
 
         //Fetch URL given as parameter
-        this.fetcher(url, {headers: headers}).then(response => {
+        this.fetcher(url, {headers: headers}).then(async response => {
             try {
                 //The startURL also need to be in the stream
                 //This only has to be done 1 time, at the beginning
@@ -87,7 +89,7 @@ export class ApiClient {
                     const contentType = contentTypeParser.parse(response.headers.get('content-type')).type;
                     let parser = formats.parsers.find(contentType);
                     if (parser) {
-                        const stream = new parser.Impl(response.body, {baseIRI: response.url});
+                        const stream = new parser.Impl(stringToStream(await response.text()), {baseIRI: response.url});
                         stream.on('data', (quad) => {
                             //If there's a void:subset, we need to add the new URL to the stream and also check its content
                             if (quad.predicate.value === 'http://rdfs.org/ns/void#subset') {

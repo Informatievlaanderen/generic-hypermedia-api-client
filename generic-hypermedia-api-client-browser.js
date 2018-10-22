@@ -1,0 +1,1 @@
+window.ghaclient = require('./index.js');
