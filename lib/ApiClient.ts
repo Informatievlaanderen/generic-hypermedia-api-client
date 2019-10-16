@@ -117,54 +117,65 @@ export class ApiClient {
                     } else {
                         //Full Text Search Handler
                         const fullTextSearchHandler = this.getHandler('FullTextSearchHandler', handlers) as FullTextSearchHandler;
-                        let querystring = '';
-                        if (fullTextSearchHandler && !fullTextSearchHandler.parameterURLFetched) {
-                            if (contentType.toLocaleLowerCase() === 'application/json' && fullTextSearchHandler.queryValues.length > 1) {
-                                if (!fullTextSearchHandler.queryKeys) {
-                                    throw new Error('(FullTextSearchHandler): please give queryKeys in the constructor');
-                                } else if (fullTextSearchHandler.queryKeys.length === fullTextSearchHandler.queryValues.length) {
-                                    for (let index in fullTextSearchHandler.queryValues) {
-                                        querystring += 'filter[' + fullTextSearchHandler.queryKeys[index] + ']=' + fullTextSearchHandler.queryValues[index] + '&';
-                                    }
-                                } else {
-                                    throw new Error('(FullTextSearchHandler): there are not as many keys as values');
-                                }
-                            } else if (contentType.toLocaleLowerCase() === 'application/json' && fullTextSearchHandler.queryValues.length > 0) {
-                                querystring += 'filter=' + fullTextSearchHandler.queryValues[0];
-                            } else {
-                                if (fullTextSearchHandler.queryValues.length !== fullTextSearchHandler.queryValues.length) {
-                                    throw new Error('(FullTextSearchHandler): there are not as many keys as values');
-                                } else {
-                                    for (let index in fullTextSearchHandler.queryValues) {
-                                        querystring += fullTextSearchHandler.queryKeys[index] + '=' + fullTextSearchHandler.queryValues[index] + '&';
-                                    }
-                                }
-                            }
-
-                            if (querystring.substr(querystring.length - 1, 1) === '&') {
-                                querystring = querystring.substr(0, querystring.length - 1);
-                            }
-
-                            querystring = '?' + querystring;
-                            const queryURL = response.url + querystring;
-
-                            if (fullTextSearchHandler.fetchQueryURL) {
-                                this.fetch(queryURL, [fullTextSearchHandler]);
-                                fullTextSearchHandler.parameterURLFetched = true;
-                            } else if (querystring.indexOf('?') !== querystring.length - 1) {
-                                //We make sure that only correct queryURLs are returned
-                                fullTextSearchHandler.quadStream.unshift(queryURL);
-                            }
-                        } else if (fullTextSearchHandler && fullTextSearchHandler.parameterURLFetched) {
-                            this.streamBodyToClient(fullTextSearchHandler.quadStream, contentType, response);
-                        }
-
-                        //VersioningHandler
                         const versioningHandler = this.getHandler('VersioningHandler', handlers) as VersioningHandler;
-                        if (versioningHandler) {
-                            //If the body is HTML or some type that can't be parsed, we have to stream the body to the client
-                            this.streamBodyToClient(versioningHandler.stream, contentType, response);
+                        let querystring = '';
+
+                        if(fullTextSearchHandler || versioningHandler){
+                            if (fullTextSearchHandler && !fullTextSearchHandler.parameterURLFetched) {
+                                if (contentType.toLocaleLowerCase() === 'application/json' && fullTextSearchHandler.queryValues.length > 1) {
+                                    if (!fullTextSearchHandler.queryKeys) {
+                                        throw new Error('(FullTextSearchHandler): please give queryKeys in the constructor');
+                                    } else if (fullTextSearchHandler.queryKeys.length === fullTextSearchHandler.queryValues.length) {
+                                        for (let index in fullTextSearchHandler.queryValues) {
+                                            querystring += 'filter[' + fullTextSearchHandler.queryKeys[index] + ']=' + fullTextSearchHandler.queryValues[index] + '&';
+                                        }
+                                    } else {
+                                        throw new Error('(FullTextSearchHandler): there are not as many keys as values');
+                                    }
+                                } else if (contentType.toLocaleLowerCase() === 'application/json' && fullTextSearchHandler.queryValues.length > 0) {
+                                    querystring += 'filter=' + fullTextSearchHandler.queryValues[0];
+                                } else {
+                                    if (fullTextSearchHandler.queryValues.length !== fullTextSearchHandler.queryValues.length) {
+                                        throw new Error('(FullTextSearchHandler): there are not as many keys as values');
+                                    } else {
+                                        for (let index in fullTextSearchHandler.queryValues) {
+                                            querystring += fullTextSearchHandler.queryKeys[index] + '=' + fullTextSearchHandler.queryValues[index] + '&';
+                                        }
+                                    }
+                                }
+
+                                if (querystring.substr(querystring.length - 1, 1) === '&') {
+                                    querystring = querystring.substr(0, querystring.length - 1);
+                                }
+
+                                querystring = '?' + querystring;
+                                const queryURL = response.url + querystring;
+
+                                if (fullTextSearchHandler.fetchQueryURL) {
+                                    this.fetch(queryURL, [fullTextSearchHandler]);
+                                    fullTextSearchHandler.parameterURLFetched = true;
+                                } else if (querystring.indexOf('?') !== querystring.length - 1) {
+                                    //We make sure that only correct queryURLs are returned
+                                    fullTextSearchHandler.quadStream.unshift(queryURL);
+                                }
+                            } else if (fullTextSearchHandler && fullTextSearchHandler.parameterURLFetched) {
+                                this.streamBodyToClient(fullTextSearchHandler.quadStream, contentType, response);
+                            }
+
+                            //VersioningHandler
+                            if (versioningHandler) {
+                                //If the body is HTML or some type that can't be parsed, we have to stream the body to the client
+                                this.streamBodyToClient(versioningHandler.stream, contentType, response);
+                            }
+                        } else {
+                            // For all handlers, except fts and versioning, when the data can not be parsed
+                            // the onEnd method is called here
+                            for (let i = 0; i < handlers.length; i++) {
+                                handlers[i].onEnd();
+                            }
                         }
+
+
                     }
 
                 } catch (e) {
