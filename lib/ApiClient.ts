@@ -112,7 +112,8 @@ export class ApiClient {
 
                         stream.on('error', (error) => {
                             stream.emit('end');
-                            console.error('ERROR (ApiClient): ' + error);
+                            throw new Error('[ApiClient]: ' + error);
+                            //console.error('ERROR (ApiClient): ' + error);
                         });
                     } else {
                         //Full Text Search Handler
@@ -179,13 +180,16 @@ export class ApiClient {
                     }
 
                 } catch (e) {
-                    console.error('Error: ' + e.message);
+                    //console.error('Error: ' + e.message);
+                    throw new Error('[ApiClient]: ' + e);
                 }
             } catch (e) {
-                console.error('Error: ' + e.message);
+                //console.error('Error: ' + e.message);
+                throw new Error('[ApiClient]: ' + e);
             }
         }).catch( (error) => {
-            console.error('Error: ' + error.message);
+            //console.error('Error: ' + error.message);
+            throw new Error('[ApiClient]: ' + error);
         })
 
     }

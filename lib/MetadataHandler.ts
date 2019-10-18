@@ -289,7 +289,6 @@ export class MetadataHandler implements IApiHandler {
             this.followDocLink = false;
         } else {
             if(Object.keys(metadataObject).length > 0){
-                console.log('This metadata was found: ');
                 this.metadataCallback(metadataObject);
             }
         }

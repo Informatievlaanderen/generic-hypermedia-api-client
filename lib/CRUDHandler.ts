@@ -105,7 +105,6 @@ export class CRUDHandler implements IApiHandler {
         for(let subjectVal in this.crudOperations){
             this.result.push(this.crudOperations[subjectVal]);
         }
-        console.log('These operations are allowed: ');
         this.crudCallback(this.result);
     }
 

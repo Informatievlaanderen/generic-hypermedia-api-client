@@ -34,7 +34,7 @@ export class LanguageHandler implements IApiHandler {
                 this.streamIsStopped = false;
             } catch (e) {
                 this.streamIsStopped = true;
-                console.log('ERROR (LanguageHandler): ' + e);
+                throw new Error('[LanguageHandler]: ' + e);
             }
         }
     }
